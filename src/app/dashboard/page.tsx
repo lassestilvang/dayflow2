@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -38,6 +38,13 @@ export default function DashboardPage() {
   const setDragging = useAppStore((state) => state.setDragging);
   const setDraggedItem = useAppStore((state) => state.setDraggedItem);
   const draggedItem = useAppStore((state) => state.drag.draggedItem);
+
+  // Prevent DndContext from rendering during SSR to avoid hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [pendingDrop, setPendingDrop] = useState<{
@@ -237,6 +244,31 @@ export default function DashboardPage() {
   };
 
   const draggedItemData = getDraggedItem();
+
+  // Show loading state during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="flex h-screen flex-col bg-background">
+        <TopBar />
+        <div className="flex flex-1 overflow-hidden">
+          <aside
+            className={cn(
+              "hidden lg:block w-64 border-r bg-background transition-all duration-300",
+              !sidebarOpen && "lg:w-0 lg:overflow-hidden"
+            )}
+          >
+            <Navigation />
+          </aside>
+          <main className="flex-1 overflow-hidden">
+            <WeekView />
+          </main>
+          <aside className="hidden xl:block w-80 border-l bg-background overflow-hidden">
+            <TaskSidebar />
+          </aside>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DndContext
