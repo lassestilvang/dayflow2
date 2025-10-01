@@ -18,17 +18,22 @@ describe("view-transitions", () => {
     });
 
     it("returns false when View Transition API is not supported", () => {
-      const original = (document as any).startViewTransition;
-      delete (document as any).startViewTransition;
+      const original = (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition;
+      delete (document as Document & { startViewTransition?: unknown })
+        .startViewTransition;
 
       expect(isViewTransitionSupported()).toBe(false);
 
-      (document as any).startViewTransition = original;
+      (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition = original;
     });
 
     it("returns false in non-browser environment", () => {
       const originalDocument = global.document;
-      // @ts-ignore
+      // @ts-expect-error - Testing non-browser environment
       delete global.document;
 
       expect(isViewTransitionSupported()).toBe(false);
@@ -39,15 +44,20 @@ describe("view-transitions", () => {
 
   describe("withViewTransition", () => {
     it("executes callback when View Transition API is not supported", async () => {
-      const original = (document as any).startViewTransition;
-      delete (document as any).startViewTransition;
+      const original = (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition;
+      delete (document as Document & { startViewTransition?: unknown })
+        .startViewTransition;
 
       const callback = jest.fn();
       await withViewTransition(callback);
 
       expect(callback).toHaveBeenCalled();
 
-      (document as any).startViewTransition = original;
+      (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition = original;
     });
 
     it("uses View Transition API when supported", async () => {
@@ -148,15 +158,20 @@ describe("view-transitions", () => {
     });
 
     it("falls back to theme transition when View Transition not supported", async () => {
-      const original = (document as any).startViewTransition;
-      delete (document as any).startViewTransition;
+      const original = (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition;
+      delete (document as Document & { startViewTransition?: unknown })
+        .startViewTransition;
 
       const callback = jest.fn();
       await withCircularReveal(callback, mockElement);
 
       expect(callback).toHaveBeenCalled();
 
-      (document as any).startViewTransition = original;
+      (
+        document as Document & { startViewTransition?: unknown }
+      ).startViewTransition = original;
     });
 
     it("falls back when no origin element provided", async () => {

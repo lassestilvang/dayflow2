@@ -1,6 +1,7 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { DndContext } from "@dnd-kit/core";
+import "@testing-library/jest-dom";
 import type {
   Task,
   Event,
@@ -9,6 +10,7 @@ import type {
   Attendee,
   TimeBlock,
 } from "@/types";
+import { useAppStore } from "@/lib/store";
 
 // Mock data factories
 export const createMockTask = (overrides?: Partial<Task>): Task => ({
@@ -17,7 +19,7 @@ export const createMockTask = (overrides?: Partial<Task>): Task => ({
   description: "Test Description",
   category: "work",
   dueDate: new Date("2024-12-31"),
-  scheduledTime: null,
+  scheduledTime: undefined,
   subtasks: [],
   isOverdue: false,
   isCompleted: false,
@@ -183,16 +185,18 @@ export function renderWithProviders(
 
 // Zustand store testing helpers
 export const mockUseAppStore = <T,>(
-  selector: (state: any) => T,
+  selector: (state: ReturnType<typeof createMockStore>) => T,
   returnValue: T
 ) => {
-  const useAppStore = require("@/lib/store").useAppStore;
-  useAppStore.mockImplementation((selectorFn: any) => {
-    if (selectorFn === selector) {
-      return returnValue;
+  const mockStore = useAppStore as unknown as jest.Mock;
+  mockStore.mockImplementation(
+    (selectorFn: (state: ReturnType<typeof createMockStore>) => T) => {
+      if (selectorFn === selector) {
+        return returnValue;
+      }
+      return selectorFn(createMockStore());
     }
-    return selectorFn(createMockStore());
-  });
+  );
 };
 
 // Wait for async updates

@@ -1,11 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  navigateToDashboard,
-  dragTaskToCalendar,
-  dragEventToNewTime,
-  handleConflictModal,
-  waitForCalendarLoad,
-} from "./helpers";
+import { navigateToDashboard, waitForCalendarLoad } from "./helpers";
 
 test.describe("Drag and Drop", () => {
   test.beforeEach(async ({ page }) => {
@@ -22,7 +16,7 @@ test.describe("Drag and Drop", () => {
         .first();
 
       if (await unscheduledTask.isVisible({ timeout: 3000 })) {
-        const taskTitle = await unscheduledTask.textContent();
+        const _taskTitle = await unscheduledTask.textContent();
 
         // Get task position
         const taskBox = await unscheduledTask.boundingBox();

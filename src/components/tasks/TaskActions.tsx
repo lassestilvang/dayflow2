@@ -8,7 +8,6 @@ import {
   Clock,
   Tag,
   Flag,
-  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Task, CategoryType } from "@/types";

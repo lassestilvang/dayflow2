@@ -5,13 +5,10 @@ import {
   format,
   isSameDay,
   isToday,
-  startOfDay,
-  differenceInMinutes,
   addDays,
   addWeeks,
   subWeeks,
   isBefore,
-  isAfter,
   areIntervalsOverlapping,
 } from "date-fns";
 import type { Event, Task, TimeBlock } from "@/types";
@@ -46,6 +43,10 @@ export function getWeekRangeString(date: Date): string {
   const weekDays = getWeekDays(date);
   const firstDay = weekDays[0];
   const lastDay = weekDays[6];
+
+  if (!firstDay || !lastDay) {
+    return "";
+  }
 
   const firstMonth = format(firstDay, "MMM");
   const lastMonth = format(lastDay, "MMM");
@@ -115,11 +116,16 @@ export function groupOverlappingBlocks(blocks: TimeBlock[]): TimeBlock[][] {
     (a, b) => a.startTime.getTime() - b.startTime.getTime()
   );
 
+  const firstBlock = sorted[0];
+  if (!firstBlock) return [];
+
   const groups: TimeBlock[][] = [];
-  let currentGroup: TimeBlock[] = [sorted[0]];
+  let currentGroup: TimeBlock[] = [firstBlock];
 
   for (let i = 1; i < sorted.length; i++) {
     const block = sorted[i];
+    if (!block) continue;
+
     const overlaps = currentGroup.some((b) => doBlocksOverlap(b, block));
 
     if (overlaps) {

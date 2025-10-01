@@ -27,6 +27,7 @@ import { formatConflictMessage } from "@/lib/conflict-detection";
 import { toast } from "sonner";
 import { ModalManager } from "@/components/modals/ModalManager";
 import { Toaster } from "sonner";
+import type { ConflictInfo } from "@/lib/conflict-detection";
 
 export default function DashboardPage() {
   const sidebarOpen = useAppStore((state) => state.ui.sidebarOpen);
@@ -44,7 +45,7 @@ export default function DashboardPage() {
     itemType: "task" | "event";
     startTime: Date;
     endTime: Date;
-    conflict: any;
+    conflict: ConflictInfo;
   } | null>(null);
 
   // Configure sensors for drag-and-drop
@@ -78,7 +79,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = (_event: DragOverEvent) => {
     // Optional: Add visual feedback while dragging over drop zones
   };
 
@@ -357,10 +358,10 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* Modal Manager - handles all modals */}
       <ModalManager />
-      
+
       {/* Toast Notifications */}
       <Toaster position="top-right" richColors closeButton />
     </DndContext>

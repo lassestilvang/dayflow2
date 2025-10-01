@@ -3,6 +3,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TaskItem } from "@/components/tasks/TaskItem";
 import { renderWithProviders, createMockTask } from "../../utils/test-utils";
+import { useAppStore } from "@/lib/store";
 
 // Mock the store
 jest.mock("@/lib/store", () => ({
@@ -72,7 +73,6 @@ describe("TaskItem", () => {
     await user.click(checkbox);
 
     // Store action should be called
-    const { useAppStore } = require("@/lib/store");
     const toggleTaskComplete = useAppStore().toggleTaskComplete;
     expect(toggleTaskComplete).toHaveBeenCalledWith(mockTask.id);
   });

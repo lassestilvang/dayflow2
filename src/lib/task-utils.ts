@@ -155,17 +155,17 @@ export function groupTasksByDate(tasks: Task[]): Record<string, Task[]> {
 
   tasks.forEach((task) => {
     if (isTaskOverdue(task)) {
-      groups.overdue.push(task);
+      groups.overdue?.push(task);
     } else if (!task.dueDate) {
-      groups.noDate.push(task);
+      groups.noDate?.push(task);
     } else if (isToday(task.dueDate)) {
-      groups.today.push(task);
+      groups.today?.push(task);
     } else if (isTomorrow(task.dueDate)) {
-      groups.tomorrow.push(task);
+      groups.tomorrow?.push(task);
     } else if (isThisWeek(task.dueDate, { weekStartsOn: 1 })) {
-      groups.thisWeek.push(task);
+      groups.thisWeek?.push(task);
     } else {
-      groups.later.push(task);
+      groups.later?.push(task);
     }
   });
 

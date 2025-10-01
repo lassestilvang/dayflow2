@@ -32,7 +32,7 @@ export function ModalManager() {
     : null;
 
   // Handler for quick add modal to open full modals
-  const handleOpenFullModal = (type: "task" | "event", data: any) => {
+  const handleOpenFullModal = (type: "task" | "event", data: Partial<Task> | Partial<Event>) => {
     if (type === "task") {
       openTaskModal(data);
     } else {

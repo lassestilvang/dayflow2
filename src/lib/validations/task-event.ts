@@ -20,21 +20,21 @@ export const calendarSourceSchema = z.enum(
 
 // Subtask schema
 export const subtaskSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   title: z
     .string()
     .min(1, "Subtask cannot be empty")
     .max(100, "Subtask must be less than 100 characters"),
-  completed: z.boolean().default(false),
+  completed: z.boolean(),
   order: z.number().int().nonnegative(),
 });
 
 // Attendee schema
 export const attendeeSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
-  status: z.enum(["pending", "accepted", "declined"]).default("pending"),
+  status: z.enum(["pending", "accepted", "declined"]),
 });
 
 // Task creation/edit schema
@@ -50,19 +50,17 @@ export const taskFormSchema = z
       .optional()
       .or(z.literal("")),
     category: categorySchema,
-    priority: prioritySchema.default("medium"),
+    priority: prioritySchema,
     dueDate: z.date().optional().nullable(),
     scheduledTime: z.date().optional().nullable(),
     duration: z
       .number()
       .int()
       .positive("Duration must be positive")
-      .max(1440, "Duration cannot exceed 24 hours")
-      .default(60),
+      .max(1440, "Duration cannot exceed 24 hours"),
     subtasks: z
       .array(subtaskSchema)
-      .max(20, "Cannot have more than 20 subtasks")
-      .default([]),
+      .max(20, "Cannot have more than 20 subtasks"),
   })
   .refine(
     (data) => {
@@ -123,9 +121,9 @@ export const eventFormSchema = z
       .max(200, "Location must be less than 200 characters")
       .optional()
       .or(z.literal("")),
-    attendees: z.array(attendeeSchema).default([]),
-    calendarSource: calendarSourceSchema.default("manual"),
-    isShared: z.boolean().default(false),
+    attendees: z.array(attendeeSchema),
+    calendarSource: calendarSourceSchema,
+    isShared: z.boolean(),
   })
   .refine(
     (data) => {

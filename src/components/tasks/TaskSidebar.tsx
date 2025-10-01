@@ -368,6 +368,7 @@ export function TaskSidebar() {
                     {/* Categories */}
                     {categories.map((category) => (
                       <button
+                        key={category.id}
                         onClick={() => handleCategorySelect(category.id)}
                         className={cn(
                           "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",

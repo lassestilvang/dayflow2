@@ -1,12 +1,8 @@
 import { test, expect } from "@playwright/test";
 import {
   navigateToDashboard,
-  createEvent,
-  deleteEvent,
   clickTimeSlot,
   waitForCalendarLoad,
-  assertEventExists,
-  assertToastMessage,
 } from "./helpers";
 
 test.describe("Event Management", () => {
@@ -22,7 +18,7 @@ test.describe("Event Management", () => {
       // Try to click on a time slot (day 1, hour 10)
       try {
         await clickTimeSlot(page, 1, 10);
-      } catch (e) {
+      } catch (_e) {
         // Fallback: use Add button
         await page.click('button:has-text("Add")');
       }
@@ -31,7 +27,7 @@ test.describe("Event Management", () => {
       await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
       // Check if this is the event modal (not task modal)
-      const modalTitle = await page
+      const _modalTitle = await page
         .locator('[role="dialog"] h2, [role="dialog"] [class*="title"]')
         .textContent();
 
@@ -650,7 +646,7 @@ test.describe("Event Management", () => {
         await eventBlock.click();
 
         // Look for source indicator (e.g., "Manual" or local icon)
-        const sourceIndicator = page.locator(
+        const _sourceIndicator = page.locator(
           'text="Manual", text="manual", [data-source="manual"]'
         );
 

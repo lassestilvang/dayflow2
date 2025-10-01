@@ -9,7 +9,7 @@ const localStorageMock = {
   removeItem: jest.fn(),
   clear: jest.fn(),
 };
-global.localStorage = localStorageMock as any;
+global.localStorage = localStorageMock as Storage;
 
 describe("useTheme", () => {
   beforeEach(() => {
@@ -120,7 +120,8 @@ describe("useTheme", () => {
   it("listens to system theme changes when theme is system", () => {
     localStorageMock.getItem.mockReturnValue("system");
 
-    const listeners: { [key: string]: any } = {};
+    const listeners: { [key: string]: (event: { matches: boolean }) => void } =
+      {};
     window.matchMedia = jest.fn().mockImplementation((query) => ({
       matches: false,
       media: query,

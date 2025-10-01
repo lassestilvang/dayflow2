@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { addDays, addWeeks, startOfDay, setHours } from "date-fns";
+import { addDays, addWeeks, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import type { CategoryType, Task, Event } from "@/types";
@@ -28,7 +28,10 @@ import { toast } from "sonner";
 interface QuickAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onOpenFullModal?: (type: "task" | "event", data: any) => void;
+  onOpenFullModal?: (
+    type: "task" | "event",
+    data: Partial<Task> | Partial<Event>
+  ) => void;
 }
 
 interface ParsedResult {
@@ -170,7 +173,7 @@ export function QuickAddModal({
             Quick Add
           </DialogTitle>
           <DialogDescription>
-            Type naturally - we'll figure out the details.
+            Type naturally - we&apos;ll figure out the details.
             <br />
             <span className="text-xs text-muted-foreground">
               Press Enter to create, Escape to cancel
@@ -416,9 +419,9 @@ function parseNaturalLanguage(input: string): ParsedResult {
   const timeMatch = input.match(timePattern);
 
   if (timeMatch) {
-    const hour = parseInt(timeMatch[1]);
+    const hour = parseInt(timeMatch[1] || "0");
     const minute = timeMatch[2] ? parseInt(timeMatch[2].slice(1)) : 0;
-    const isPM = timeMatch[3].toLowerCase() === "pm";
+    const isPM = (timeMatch[3] || "").toLowerCase() === "pm";
 
     const adjustedHour =
       isPM && hour !== 12 ? hour + 12 : hour === 12 && !isPM ? 0 : hour;

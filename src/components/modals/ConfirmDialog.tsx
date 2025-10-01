@@ -39,7 +39,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const [isConfirming, setIsConfirming] = React.useState(false);
 
-  const handleConfirm = async () => {
+  const handleConfirm = React.useCallback(async () => {
     try {
       setIsConfirming(true);
       await onConfirm();
@@ -49,7 +49,7 @@ export function ConfirmDialog({
     } finally {
       setIsConfirming(false);
     }
-  };
+  }, [onConfirm, onOpenChange]);
 
   const handleKeyDown = React.useCallback(
     (e: KeyboardEvent) => {
@@ -63,7 +63,7 @@ export function ConfirmDialog({
         onOpenChange(false);
       }
     },
-    [open, isConfirming, loading]
+    [open, isConfirming, loading, handleConfirm, onOpenChange]
   );
 
   React.useEffect(() => {

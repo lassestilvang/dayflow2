@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
   navigateToDashboard,
-  switchTheme,
-  getCurrentTheme,
 } from "./helpers";
 
 test.describe("Theme Switching", () => {

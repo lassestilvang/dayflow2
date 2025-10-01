@@ -1,4 +1,4 @@
-import { Page, expect, Locator } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
 import type { CategoryType } from "@/types";
 
 /**
@@ -101,7 +101,7 @@ export async function clickTimeSlot(
     try {
       await page.click(selector, { timeout: 2000 });
       return;
-    } catch (e) {
+    } catch (_e) {
       continue;
     }
   }
@@ -539,7 +539,7 @@ export async function selectPriority(
  * Set date picker
  */
 export async function setDatePicker(page: Page, date: Date): Promise<void> {
-  const dateString = date.toISOString().split("T")[0];
+  const dateString = date.toISOString().split("T")[0] || "";
   await page.fill('input[type="date"], input[name*="date" i]', dateString);
 }
 
@@ -551,7 +551,7 @@ export async function setDateTimePicker(
   field: "start" | "end",
   dateTime: Date
 ): Promise<void> {
-  const dateString = dateTime.toISOString().split("T")[0];
+  const dateString = dateTime.toISOString().split("T")[0] || "";
   const timeString = dateTime.toTimeString().slice(0, 5);
 
   await page.fill(`input[name*="${field}" i][type="date"]`, dateString);

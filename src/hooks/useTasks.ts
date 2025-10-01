@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import type { Task } from "@/types";
 import { isBefore, startOfDay } from "date-fns";
 
 export function useTasks() {
@@ -12,7 +11,7 @@ export function useTasks() {
   const setTaskFilters = useAppStore((state) => state.setTaskFilters);
   const setSelectedCategory = useAppStore((state) => state.setSelectedCategory);
 
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
 
   // Filter and compute tasks
   const filteredTasks = useMemo(() => {
@@ -117,7 +116,6 @@ export function useTasks() {
     stats,
     filters,
     selectedCategory,
-    loading,
     setTaskFilters,
     setSelectedCategory,
   };

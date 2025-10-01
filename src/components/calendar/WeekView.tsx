@@ -7,6 +7,7 @@ import { useCalendar } from "@/hooks/useCalendar";
 import { CalendarGrid } from "./CalendarGrid";
 import { getWeekRangeString } from "@/lib/calendar-utils";
 import { cn } from "@/lib/utils";
+import type { TimeBlock } from "@/types";
 
 export function WeekView() {
   const { selectedDate, timeBlocks, setSelectedDate, navigateDate } =
@@ -50,7 +51,7 @@ export function WeekView() {
     // TODO: Open modal/dialog to create new event
   };
 
-  const handleBlockClick = (block: any) => {
+  const handleBlockClick = (block: TimeBlock) => {
     console.log("Block clicked:", block);
     // TODO: Open modal/dialog to view/edit event
   };

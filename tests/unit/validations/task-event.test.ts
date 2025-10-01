@@ -164,14 +164,14 @@ describe("task-event validations", () => {
 
     it("sets default priority to medium", () => {
       const task = { ...validTask };
-      delete (task as any).priority;
+      delete (task as Partial<typeof validTask>).priority;
       const result = taskFormSchema.parse(task);
       expect(result.priority).toBe("medium");
     });
 
     it("sets default duration to 60", () => {
       const task = { ...validTask };
-      delete (task as any).duration;
+      delete (task as Partial<typeof validTask>).duration;
       const result = taskFormSchema.parse(task);
       expect(result.duration).toBe(60);
     });
@@ -256,13 +256,13 @@ describe("task-event validations", () => {
 
     it("requires startTime", () => {
       const event = { ...validEvent };
-      delete (event as any).startTime;
+      delete (event as Partial<typeof validEvent>).startTime;
       expect(() => eventFormSchema.parse(event)).toThrow();
     });
 
     it("requires endTime", () => {
       const event = { ...validEvent };
-      delete (event as any).endTime;
+      delete (event as Partial<typeof validEvent>).endTime;
       expect(() => eventFormSchema.parse(event)).toThrow();
     });
 
@@ -317,14 +317,14 @@ describe("task-event validations", () => {
 
     it("sets default calendarSource to manual", () => {
       const event = { ...validEvent };
-      delete (event as any).calendarSource;
+      delete (event as Partial<typeof validEvent>).calendarSource;
       const result = eventFormSchema.parse(event);
       expect(result.calendarSource).toBe("manual");
     });
 
     it("sets default isShared to false", () => {
       const event = { ...validEvent };
-      delete (event as any).isShared;
+      delete (event as Partial<typeof validEvent>).isShared;
       const result = eventFormSchema.parse(event);
       expect(result.isShared).toBe(false);
     });

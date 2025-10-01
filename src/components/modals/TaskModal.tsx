@@ -4,17 +4,8 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  Clock,
-  Trash2,
-  Loader2,
-  AlertCircle,
-  Save,
-} from "lucide-react";
-import { format } from "date-fns";
+import { Trash2, Loader2, AlertCircle, Save } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 import {
   taskFormSchema,
   type TaskFormValues,
@@ -146,9 +137,9 @@ export function TaskModal({
         if (conflict.hasConflict) {
           toast.warning("Time Conflict Detected", {
             description: `This task conflicts with ${
-              conflict.conflictCount
+              conflict.conflictingEvents.length
             } existing ${
-              conflict.conflictCount === 1 ? "item" : "items"
+              conflict.conflictingEvents.length === 1 ? "item" : "items"
             }. You can still save it.`,
           });
         }
@@ -158,6 +149,8 @@ export function TaskModal({
         // Update existing task
         updateTask(task.id, {
           ...values,
+          dueDate: values.dueDate || undefined,
+          scheduledTime: values.scheduledTime || undefined,
           updatedAt: new Date(),
         });
         toast.success("Task Updated", {
@@ -461,7 +454,9 @@ export function TaskModal({
                     <ul className="text-sm text-destructive/80 mt-1 space-y-1">
                       {Object.entries(form.formState.errors).map(
                         ([key, error]) => (
-                          <li key={key}>• {error.message}</li>
+                          <li key={key}>
+                            • {(error as { message?: string })?.message}
+                          </li>
                         )
                       )}
                     </ul>

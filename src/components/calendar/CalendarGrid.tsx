@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { format, isSameDay, isToday } from "date-fns";
+import { format, isToday } from "date-fns";
 import { motion } from "framer-motion";
-import type { TimeBlock as TimeBlockType } from "@/types";
+import type { TimeBlock as TimeBlockType, Event } from "@/types";
 import { TimeBlock } from "./TimeBlock";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -116,14 +116,15 @@ export function CalendarGrid({
 
       // Calculate positions for overlapping blocks
       return blocks.map((block) => {
-        const position = calculateEventPosition(
+        const eventData: Event | { startTime: Date; endTime: Date } =
           "startTime" in block.data
             ? block.data
             : {
                 startTime: block.startTime,
                 endTime: block.endTime,
-              }
-        );
+              };
+
+        const position = calculateEventPosition(eventData as Event);
 
         // Find which group this block belongs to
         const groupIndex = groups.findIndex((group) =>
@@ -132,6 +133,15 @@ export function CalendarGrid({
 
         if (groupIndex !== -1) {
           const group = groups[groupIndex];
+          if (!group) {
+            return {
+              block,
+              top: position.top,
+              height: position.height,
+              left: 0,
+              width: 100,
+            };
+          }
           const blockIndexInGroup = group.findIndex((b) => b.id === block.id);
           const groupSize = group.length;
 
@@ -188,7 +198,7 @@ export function CalendarGrid({
         {/* Day headers */}
         <div className="sticky top-0 z-20 flex border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="w-20 flex-shrink-0 border-r" />
-          {weekDays.map((day, dayIndex) => (
+          {weekDays.map((day, _dayIndex) => (
             <div
               key={day.toISOString()}
               className={cn(

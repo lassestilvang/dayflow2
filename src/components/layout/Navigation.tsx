@@ -43,7 +43,7 @@ export function Navigation() {
       "system",
     ];
     const currentIndex = themeSequence.indexOf(theme);
-    const nextTheme = themeSequence[(currentIndex + 1) % themeSequence.length];
+    const nextTheme = themeSequence[(currentIndex + 1) % themeSequence.length] || "system";
 
     // Use View Transition API for smooth theme change
     await withCircularReveal(() => {

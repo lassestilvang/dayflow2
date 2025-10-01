@@ -2,9 +2,8 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
 import { Clock, Users, MapPin, GripVertical } from "lucide-react";
-import type { TimeBlock as TimeBlockType, Event, Task } from "@/types";
+import type { TimeBlock as TimeBlockType, Event } from "@/types";
 import { cn } from "@/lib/utils";
 import { formatTime, isTimePast } from "@/lib/calendar-utils";
 

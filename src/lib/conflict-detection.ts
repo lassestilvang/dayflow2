@@ -1,5 +1,5 @@
-import type { Event, Task, TimeBlock } from "@/types";
-import { format, isWithinInterval, areIntervalsOverlapping } from "date-fns";
+import type { Event, Task } from "@/types";
+import { isWithinInterval, areIntervalsOverlapping } from "date-fns";
 
 export interface ConflictInfo {
   hasConflict: boolean;
@@ -107,8 +107,8 @@ export function checkTimeConflict(
  */
 function generateConflictSuggestions(
   conflicts: (Event | Task)[],
-  newStartTime: Date,
-  newEndTime: Date
+  _newStartTime: Date,
+  _newEndTime: Date
 ): string[] {
   const suggestions: string[] = [];
 
@@ -118,7 +118,9 @@ function generateConflictSuggestions(
 
   if (conflicts.length === 1) {
     const conflict = conflicts[0];
-    suggestions.push(`This time slot overlaps with "${conflict.title}"`);
+    if (conflict) {
+      suggestions.push(`This time slot overlaps with "${conflict.title}"`);
+    }
   } else {
     suggestions.push(`This time slot overlaps with ${conflicts.length} events`);
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Bell, User, Plus, Search, Calendar } from "lucide-react";
+import { Menu, Bell, Plus, Search, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,6 @@ export function TopBar() {
 
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
   const toggleTaskSidebar = useAppStore((state) => state.toggleTaskSidebar);
-  const theme = useAppStore((state) => state.ui.theme);
   const openQuickAddModal = useAppStore((state) => state.openQuickAddModal);
 
   // Mock notifications

@@ -1,6 +1,5 @@
 import { useAppStore } from "@/lib/store";
 import { createMockTask, createMockEvent } from "../../utils/test-utils";
-import type { Task, Event } from "@/types";
 
 describe("useAppStore", () => {
   beforeEach(() => {

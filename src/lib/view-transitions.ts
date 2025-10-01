@@ -22,7 +22,15 @@ export async function withViewTransition(
   }
 
   // Use View Transition API for smooth animation
-  const transition = (document as any).startViewTransition(async () => {
+  const transition = (
+    document as Document & {
+      startViewTransition: (callback: () => Promise<void> | void) => {
+        finished: Promise<void>;
+        ready: Promise<void>;
+        updateCallbackDone: Promise<void>;
+      };
+    }
+  ).startViewTransition(async () => {
     await callback();
   });
 

@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import {
-  Calendar,
   Clock,
   Trash2,
   Loader2,
@@ -16,13 +15,12 @@ import {
   X,
   Plus,
 } from "lucide-react";
-import { format, differenceInMinutes } from "date-fns";
+import { differenceInMinutes } from "date-fns";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import {
   eventFormSchema,
   type EventFormValues,
-  calculateDuration,
 } from "@/lib/validations/task-event";
 import type { Event, Attendee } from "@/types";
 import {
@@ -154,9 +152,9 @@ export function EventModal({
       if (conflict.hasConflict) {
         toast.warning("Time Conflict Detected", {
           description: `This event conflicts with ${
-            conflict.conflictCount
+            conflict.conflictingEvents.length
           } existing ${
-            conflict.conflictCount === 1 ? "item" : "items"
+            conflict.conflictingEvents.length === 1 ? "item" : "items"
           }. You can still save it.`,
         });
       }
@@ -498,6 +496,7 @@ export function EventModal({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() =>
+                                  attendee.id &&
                                   handleRemoveAttendee(attendee.id)
                                 }
                                 className="ml-2 h-8 w-8 p-0"

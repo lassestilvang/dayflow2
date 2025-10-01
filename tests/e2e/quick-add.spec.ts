@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
   navigateToDashboard,
-  useQuickAdd,
-  waitForCalendarLoad,
 } from "./helpers";
 
 test.describe("Quick Add - Natural Language Entry", () => {

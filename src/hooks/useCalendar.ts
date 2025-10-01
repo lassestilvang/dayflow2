@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import type { Event, Task, TimeBlock } from "@/types";
+import type { TimeBlock } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 
 export function useCalendar() {
@@ -16,6 +16,18 @@ export function useCalendar() {
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
 
   useEffect(() => {
+    // Defensive check: ensure events is an array
+    if (!Array.isArray(events)) {
+      console.warn("Events is not an array during hydration, skipping time block conversion");
+      return;
+    }
+
+    // Defensive check: ensure tasks is an array
+    if (!Array.isArray(tasks)) {
+      console.warn("Tasks is not an array during hydration, skipping time block conversion");
+      return;
+    }
+
     // Convert events to time blocks
     const eventBlocks: TimeBlock[] = events.map((event) => ({
       id: event.id,

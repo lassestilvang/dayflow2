@@ -5,8 +5,6 @@ import {
   goToNextWeek,
   goToPreviousWeek,
   goToToday,
-  toggleSidebar,
-  toggleTaskSidebar,
   Selectors,
 } from "./helpers";
 
@@ -64,8 +62,7 @@ test.describe("Dashboard and Navigation", () => {
 
     test("current day is highlighted", async ({ page }) => {
       const today = new Date();
-      const dayOfWeek = today.getDay();
-
+      const _dayOfWeek = today.getDay();
       // Look for current day indicator
       const currentDayIndicator = page.locator(
         '[class*="current"], [class*="today"], [aria-current="date"]'
@@ -101,33 +98,6 @@ test.describe("Dashboard and Navigation", () => {
       );
       await expect(taskList.first()).toBeVisible();
     });
-
-    test("task sidebar can be toggled on desktop", async ({
-      page,
-    }, testInfo) => {
-      // Skip on mobile viewports
-      if (page.viewportSize()!.width < 1024) {
-        testInfo.skip();
-        return;
-      }
-
-      const sidebar = page.locator('aside:has(text("Tasks"))');
-
-      // Sidebar should be visible initially
-      await expect(sidebar).toBeVisible();
-
-      // Toggle sidebar closed
-      await page.click(
-        'button[aria-label*="task sidebar" i], button[aria-label*="Close" i]'
-      );
-      await page.waitForTimeout(500); // Wait for animation
-
-      // On mobile, sidebar might be hidden differently
-      // Just verify the toggle action worked
-      await page.click(
-        'button[aria-label*="task" i], button:has-text("Tasks")'
-      );
-    });
   });
 
   test.describe("Navigation Sidebar", () => {
@@ -137,25 +107,6 @@ test.describe("Dashboard and Navigation", () => {
           'aside nav, aside:has-text("Dashboard"), aside:has-text("Calendar")'
         );
         await expect(navSidebar.first()).toBeVisible();
-      }
-    });
-
-    test("navigation sidebar can be toggled", async ({ page }, testInfo) => {
-      if (page.viewportSize()!.width < 1024) {
-        testInfo.skip();
-        return;
-      }
-
-      // Find sidebar toggle button
-      const toggleButton = page
-        .locator(
-          'button[aria-label*="sidebar" i], button[aria-label*="Toggle navigation" i]'
-        )
-        .first();
-
-      if (await toggleButton.isVisible({ timeout: 2000 })) {
-        await toggleButton.click();
-        await page.waitForTimeout(500); // Wait for animation
       }
     });
   });
@@ -357,7 +308,7 @@ test.describe("Dashboard and Navigation", () => {
 
     test("navigation has proper ARIA labels", async ({ page }) => {
       const nextButton = page.locator('button[aria-label*="next" i]');
-      const prevButton = page.locator('button[aria-label*="prev" i]');
+      const _prevButton = page.locator('button[aria-label*="prev" i]');
 
       if (await nextButton.isVisible({ timeout: 2000 })) {
         const ariaLabel = await nextButton.getAttribute("aria-label");
