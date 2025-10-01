@@ -91,22 +91,29 @@ export function CalendarGrid({
   onTimeSlotClick,
   onBlockClick,
 }: CalendarGridProps) {
-  const [currentTimePosition, setCurrentTimePosition] = useState(
-    getCurrentTimePosition()
-  );
+  const [mounted, setMounted] = useState(false);
+  const [currentTimePosition, setCurrentTimePosition] = useState(0);
   const weekDays = useMemo(() => getWeekDays(date), [date]);
   const hourSlots = useMemo(() => getHourSlots(), []);
 
   const openEventModal = useAppStore((state) => state.openEventModal);
 
+  // Initialize mounted state and current time position on client-side only
+  useEffect(() => {
+    setMounted(true);
+    setCurrentTimePosition(getCurrentTimePosition());
+  }, []);
+
   // Update current time indicator every minute
   useEffect(() => {
+    if (!mounted) return;
+    
     const interval = setInterval(() => {
       setCurrentTimePosition(getCurrentTimePosition());
     }, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, []);
+  }, [mounted]);
 
   // Get blocks for each day and handle positioning
   const dayBlocks = useMemo(() => {
@@ -190,7 +197,10 @@ export function CalendarGrid({
 
   const todayIndex = weekDays.findIndex((day) => isToday(day));
   const showCurrentTimeIndicator =
-    todayIndex !== -1 && currentTimePosition >= 0;
+    mounted && todayIndex !== -1 && currentTimePosition >= 0;
+
+  // Static reference date for consistent time formatting (server & client)
+  const referenceDate = new Date(2024, 0, 1); // Jan 1, 2024
 
   return (
     <div className="flex-1 overflow-auto bg-background">
@@ -228,7 +238,7 @@ export function CalendarGrid({
               {/* Time label */}
               <div className="w-20 flex-shrink-0 border-r px-2 py-2 text-right">
                 <span className="text-xs text-muted-foreground">
-                  {format(new Date().setHours(hour, 0), "h:mm a")}
+                  {format(new Date(referenceDate).setHours(hour, 0), "h:mm a")}
                 </span>
               </div>
 

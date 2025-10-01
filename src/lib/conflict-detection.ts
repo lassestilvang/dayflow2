@@ -39,8 +39,12 @@ export function checkTimeConflict(
 ): ConflictInfo {
   const conflicts: (Event | Task)[] = [];
 
+  // Safety check: handle undefined/null arrays
+  const safeEvents = existingEvents || [];
+  const safeTasks = existingTasks || [];
+
   // Check conflicts with events
-  for (const event of existingEvents) {
+  for (const event of safeEvents) {
     if (excludeId && event.id === excludeId) continue;
 
     if (
@@ -56,7 +60,7 @@ export function checkTimeConflict(
   }
 
   // Check conflicts with scheduled tasks
-  for (const task of existingTasks) {
+  for (const task of safeTasks) {
     if (excludeId && task.id === excludeId) continue;
 
     if (task.scheduledTime && task.dueDate) {

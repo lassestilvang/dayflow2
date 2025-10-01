@@ -31,8 +31,8 @@ import type { ConflictInfo } from "@/lib/conflict-detection";
 
 export default function DashboardPage() {
   const sidebarOpen = useAppStore((state) => state.ui.sidebarOpen);
-  const tasks = useAppStore((state) => state.tasks.tasks);
-  const events = useAppStore((state) => state.events.events);
+  const tasks = useAppStore((state) => state.tasks?.tasks || []);
+  const events = useAppStore((state) => state.events?.events || []);
   const scheduleTask = useAppStore((state) => state.scheduleTask);
   const moveEvent = useAppStore((state) => state.moveEvent);
   const setDragging = useAppStore((state) => state.setDragging);
@@ -97,6 +97,12 @@ export default function DashboardPage() {
     const dropData = over.data.current;
 
     if (!dragData || !dropData) {
+      return;
+    }
+
+    // Safety check: ensure arrays are defined
+    if (!tasks || !events) {
+      console.error("Tasks or events array is undefined");
       return;
     }
 
@@ -195,7 +201,7 @@ export default function DashboardPage() {
   const handleConflictResolve = (action: "schedule" | "cancel") => {
     if (action === "schedule") {
       // Conflict was already applied, just close modal and show toast
-      if (pendingDrop) {
+      if (pendingDrop && tasks && events) {
         const item =
           pendingDrop.itemType === "task"
             ? tasks.find((t) => t.id === pendingDrop.itemId)
@@ -220,9 +226,11 @@ export default function DashboardPage() {
     if (!draggedItem) return null;
 
     if (draggedItem.type === "task") {
+      if (!tasks) return null;
       const task = tasks.find((t) => t.id === draggedItem.id);
       return task ? { type: "task" as const, data: task } : null;
     } else {
+      if (!events) return null;
       const event = events.find((e) => e.id === draggedItem.id);
       return event ? { type: "event" as const, data: event } : null;
     }
