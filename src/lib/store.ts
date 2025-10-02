@@ -915,10 +915,118 @@ export const useAppStore = create<AppState>()(
       }),
       {
         name: "dayflow-storage",
+        version: 1, // Increment this to force a fresh start and clear old data
         partialize: (state) => ({
           ui: { theme: state.ui.theme, sidebarOpen: state.ui.sidebarOpen },
-          events: { viewMode: state.events.viewMode },
+          events: {
+            viewMode: state.events.viewMode,
+            events: state.events.events,
+            selectedDate: state.events.selectedDate,
+          },
+          tasks: {
+            tasks: state.tasks.tasks,
+            filters: state.tasks.filters,
+            selectedCategory: state.tasks.selectedCategory,
+          },
         }),
+        merge: (persistedState, currentState) => {
+          // Deep merge with Date deserialization
+          if (!persistedState) return currentState;
+
+          const merged = {
+            ...currentState,
+            ...(typeof persistedState === "object" ? persistedState : {}),
+          } as AppState;
+
+          // Deserialize Date objects in events
+          if (
+            persistedState &&
+            typeof persistedState === "object" &&
+            "events" in persistedState
+          ) {
+            const persistedEvents = (persistedState as any).events;
+            if (
+              persistedEvents?.events &&
+              Array.isArray(persistedEvents.events)
+            ) {
+              if (persistedEvents.events.length === 0) {
+                // Keep sample data from currentState if no persisted events
+                merged.events = currentState.events;
+              } else {
+                merged.events = {
+                  ...persistedEvents,
+                  events: persistedEvents.events.map((event: any) => ({
+                    ...event,
+                    startTime: new Date(event.startTime),
+                    endTime: new Date(event.endTime),
+                    createdAt: new Date(event.createdAt),
+                    updatedAt: new Date(event.updatedAt),
+                  })),
+                  selectedDate: persistedEvents.selectedDate
+                    ? new Date(persistedEvents.selectedDate)
+                    : currentState.events.selectedDate,
+                };
+              }
+            }
+          }
+
+          // Deserialize Date objects in tasks
+          if (
+            persistedState &&
+            typeof persistedState === "object" &&
+            "tasks" in persistedState
+          ) {
+            const persistedTasks = (persistedState as any).tasks;
+            if (persistedTasks?.tasks && Array.isArray(persistedTasks.tasks)) {
+              if (
+                persistedTasks.tasks.length === 0 &&
+                currentState?.tasks?.tasks
+              ) {
+                // Keep sample data from currentState if no persisted tasks
+                merged.tasks = currentState.tasks;
+              } else {
+                merged.tasks = {
+                  ...persistedTasks,
+                  tasks: persistedTasks.tasks.map((task: any) => ({
+                    ...task,
+                    dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                    scheduledTime: task.scheduledTime
+                      ? new Date(task.scheduledTime)
+                      : undefined,
+                    createdAt: new Date(task.createdAt),
+                    updatedAt: new Date(task.updatedAt),
+                  })),
+                };
+              }
+            }
+          }
+
+          return merged;
+        },
+        onRehydrateStorage: () => {
+          console.log(
+            "[DAYFLOW DEBUG] Starting state rehydration from localStorage"
+          );
+          return (state, error) => {
+            if (error) {
+              console.error("[DAYFLOW DEBUG] Error during rehydration:", error);
+            } else {
+              console.log("[DAYFLOW DEBUG] State rehydrated successfully");
+              console.log("[DAYFLOW DEBUG] Persisted state:", {
+                ui: state?.ui,
+                eventsViewMode: state?.events?.viewMode,
+              });
+              console.log(state?.tasks?.tasks?.length || 0);
+              console.log(
+                "[DAYFLOW DEBUG] Events count:",
+                state?.events?.events?.length || 0
+              );
+              console.log(
+                "[DAYFLOW DEBUG] Tasks and events ARE NOW persisted to localStorage"
+              );
+            }
+          };
+        },
       }
     )
   )

@@ -44,6 +44,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
+
+    // Diagnostic logging
+    console.log("[DAYFLOW DEBUG] Dashboard mounted");
+    console.log("[DAYFLOW DEBUG] Tasks:", tasks.length, "tasks loaded");
+    console.log("[DAYFLOW DEBUG] Events:", events.length, "events loaded");
+    if (tasks.length > 0) {
+      console.log("[DAYFLOW DEBUG] Sample task dates:", {
+        firstTask: tasks[0]?.title,
+        scheduledTime: tasks[0]?.scheduledTime,
+        dueDate: tasks[0]?.dueDate,
+      });
+    }
+    if (events.length > 0) {
+      console.log("[DAYFLOW DEBUG] Sample event dates:", {
+        firstEvent: events[0]?.title,
+        startTime: events[0]?.startTime,
+        endTime: events[0]?.endTime,
+      });
+    }
   }, []);
 
   const [showConflictModal, setShowConflictModal] = useState(false);
