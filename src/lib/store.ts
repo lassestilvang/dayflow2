@@ -900,55 +900,108 @@ export const useAppStore = create<AppState>()(
         // Scroll State
         scroll: {
           renderedDateRange: {
-            startDate: addDays(today, -10),
-            endDate: addDays(today, 10),
+            startDate: addDays(today, -17),
+            endDate: addDays(today, 17),
           },
           anchorDate: today,
           currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),
         },
         setRenderedDateRange: (startDate, endDate) =>
-          set((state) => ({
-            scroll: {
-              ...state.scroll,
-              renderedDateRange: {
-                startDate,
-                endDate,
+          set((state) => {
+            console.log("[STORE] setRenderedDateRange called:", {
+              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
+              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
+              newStart: startDate.toISOString(),
+              newEnd: endDate.toISOString(),
+            });
+            return {
+              scroll: {
+                ...state.scroll,
+                renderedDateRange: {
+                  startDate,
+                  endDate,
+                },
               },
-            },
-          })),
+            };
+          }),
         setAnchorDate: (date) =>
-          set((state) => ({
-            scroll: { ...state.scroll, anchorDate: date },
-          })),
+          set((state) => {
+            console.log("[STORE] setAnchorDate called:", {
+              old: state.scroll.anchorDate.toISOString(),
+              new: date.toISOString(),
+            });
+            return {
+              scroll: { ...state.scroll, anchorDate: date },
+            };
+          }),
         setCurrentWeekStart: (date) =>
-          set((state) => ({
-            scroll: { ...state.scroll, currentWeekStart: date },
-          })),
+          set((state) => {
+            console.log("[STORE] setCurrentWeekStart called:", {
+              old: state.scroll.currentWeekStart.toISOString(),
+              new: date.toISOString(),
+            });
+            return {
+              scroll: { ...state.scroll, currentWeekStart: date },
+            };
+          }),
         expandDateRangeLeft: (days) =>
-          set((state) => ({
-            scroll: {
-              ...state.scroll,
-              renderedDateRange: {
-                startDate: addDays(
-                  state.scroll.renderedDateRange.startDate,
-                  -days
-                ),
-                endDate: state.scroll.renderedDateRange.endDate,
+          set((state) => {
+            console.log("[STORE] expandDateRangeLeft called:", {
+              days,
+              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
+              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
+              oldAnchor: state.scroll.anchorDate.toISOString(),
+            });
+            const newState = {
+              scroll: {
+                ...state.scroll,
+                renderedDateRange: {
+                  startDate: addDays(
+                    state.scroll.renderedDateRange.startDate,
+                    -days
+                  ),
+                  endDate: state.scroll.renderedDateRange.endDate,
+                },
+                anchorDate: addDays(state.scroll.anchorDate, -days),
               },
-              anchorDate: addDays(state.scroll.anchorDate, -days),
-            },
-          })),
+            };
+            console.log("[STORE] expandDateRangeLeft result:", {
+              newStart:
+                newState.scroll.renderedDateRange.startDate.toISOString(),
+              newEnd: newState.scroll.renderedDateRange.endDate.toISOString(),
+              newAnchor: newState.scroll.anchorDate.toISOString(),
+            });
+            return newState;
+          }),
         expandDateRangeRight: (days) =>
-          set((state) => ({
-            scroll: {
-              ...state.scroll,
-              renderedDateRange: {
-                startDate: state.scroll.renderedDateRange.startDate,
-                endDate: addDays(state.scroll.renderedDateRange.endDate, days),
+          set((state) => {
+            console.log("[STORE] expandDateRangeRight called:", {
+              days,
+              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
+              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
+              oldAnchor: state.scroll.anchorDate.toISOString(),
+            });
+            const newState = {
+              scroll: {
+                ...state.scroll,
+                renderedDateRange: {
+                  startDate: state.scroll.renderedDateRange.startDate,
+                  endDate: addDays(
+                    state.scroll.renderedDateRange.endDate,
+                    days
+                  ),
+                },
+                anchorDate: addDays(state.scroll.anchorDate, days),
               },
-              anchorDate: addDays(state.scroll.anchorDate, days),
-            },
-          })),
+            };
+            console.log("[STORE] expandDateRangeRight result:", {
+              newStart:
+                newState.scroll.renderedDateRange.startDate.toISOString(),
+              newEnd: newState.scroll.renderedDateRange.endDate.toISOString(),
+              newAnchor: newState.scroll.anchorDate.toISOString(),
+            });
+            return newState;
+          }),
 
         // Drag State
         drag: {
@@ -1012,28 +1065,43 @@ export const useAppStore = create<AppState>()(
             typeof persistedState === "object" &&
             "events" in persistedState
           ) {
-            const persistedEvents = (persistedState as any).events;
+            const persistedEvents = (persistedState as Record<string, unknown>)
+              .events;
             if (
-              persistedEvents?.events &&
-              Array.isArray(persistedEvents.events)
+              persistedEvents &&
+              typeof persistedEvents === "object" &&
+              "events" in persistedEvents &&
+              Array.isArray((persistedEvents as Record<string, unknown>).events)
             ) {
-              if (persistedEvents.events.length === 0) {
+              const eventsArray = (persistedEvents as Record<string, unknown>)
+                .events as Array<Record<string, unknown>>;
+              if (eventsArray.length === 0) {
                 // Keep sample data from currentState if no persisted events
                 merged.events = currentState.events;
               } else {
                 merged.events = {
-                  ...persistedEvents,
-                  events: persistedEvents.events.map((event: any) => ({
+                  ...(persistedEvents as Record<string, unknown>),
+                  events: eventsArray.map((event: Record<string, unknown>) => ({
                     ...event,
-                    startTime: new Date(event.startTime),
-                    endTime: new Date(event.endTime),
-                    createdAt: new Date(event.createdAt),
-                    updatedAt: new Date(event.updatedAt),
+                    startTime: new Date(
+                      event.startTime as string | number | Date
+                    ),
+                    endTime: new Date(event.endTime as string | number | Date),
+                    createdAt: new Date(
+                      event.createdAt as string | number | Date
+                    ),
+                    updatedAt: new Date(
+                      event.updatedAt as string | number | Date
+                    ),
                   })),
-                  selectedDate: persistedEvents.selectedDate
-                    ? new Date(persistedEvents.selectedDate)
+                  selectedDate: (persistedEvents as Record<string, unknown>)
+                    .selectedDate
+                    ? new Date(
+                        (persistedEvents as Record<string, unknown>)
+                          .selectedDate as string | number | Date
+                      )
                     : currentState.events.selectedDate,
-                };
+                } as EventState;
               }
             }
           }
@@ -1044,27 +1112,38 @@ export const useAppStore = create<AppState>()(
             typeof persistedState === "object" &&
             "tasks" in persistedState
           ) {
-            const persistedTasks = (persistedState as any).tasks;
-            if (persistedTasks?.tasks && Array.isArray(persistedTasks.tasks)) {
-              if (
-                persistedTasks.tasks.length === 0 &&
-                currentState?.tasks?.tasks
-              ) {
+            const persistedTasks = (persistedState as Record<string, unknown>)
+              .tasks;
+            if (
+              persistedTasks &&
+              typeof persistedTasks === "object" &&
+              "tasks" in persistedTasks &&
+              Array.isArray((persistedTasks as Record<string, unknown>).tasks)
+            ) {
+              const tasksArray = (persistedTasks as Record<string, unknown>)
+                .tasks as Array<Record<string, unknown>>;
+              if (tasksArray.length === 0 && currentState?.tasks?.tasks) {
                 // Keep sample data from currentState if no persisted tasks
                 merged.tasks = currentState.tasks;
               } else {
                 merged.tasks = {
-                  ...persistedTasks,
-                  tasks: persistedTasks.tasks.map((task: any) => ({
+                  ...(persistedTasks as Record<string, unknown>),
+                  tasks: tasksArray.map((task: Record<string, unknown>) => ({
                     ...task,
-                    dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-                    scheduledTime: task.scheduledTime
-                      ? new Date(task.scheduledTime)
+                    dueDate: task.dueDate
+                      ? new Date(task.dueDate as string | number | Date)
                       : undefined,
-                    createdAt: new Date(task.createdAt),
-                    updatedAt: new Date(task.updatedAt),
+                    scheduledTime: task.scheduledTime
+                      ? new Date(task.scheduledTime as string | number | Date)
+                      : undefined,
+                    createdAt: new Date(
+                      task.createdAt as string | number | Date
+                    ),
+                    updatedAt: new Date(
+                      task.updatedAt as string | number | Date
+                    ),
                   })),
-                };
+                } as TaskState;
               }
             }
           }

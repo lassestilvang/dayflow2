@@ -98,15 +98,7 @@ export const DayColumn = React.memo(function DayColumn({
     const groups = groupOverlappingBlocks(blocks);
 
     return blocks.map((block) => {
-      const eventData =
-        "startTime" in block.data
-          ? block.data
-          : {
-              startTime: block.startTime,
-              endTime: block.endTime,
-            };
-
-      const position = calculateEventPosition(eventData as any);
+      const position = calculateEventPosition(block.data);
 
       // Find which group this block belongs to
       const groupIndex = groups.findIndex((group) =>

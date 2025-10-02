@@ -1,14 +1,19 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
-import { renderWithProviders } from "@/tests/utils/test-utils";
+import { renderWithProviders } from "../../utils/test-utils";
 import type { TimeBlock } from "@/types";
 import { addDays, eachDayOfInterval } from "date-fns";
 
 // Mock framer-motion to avoid animation issues in tests
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<Record<string, unknown>>) => (
+      <div {...props}>{children}</div>
+    ),
   },
 }));
 
@@ -27,6 +32,7 @@ describe("CalendarGrid", () => {
       type: "event",
       startTime: new Date(2024, 0, 15, 9, 0),
       endTime: new Date(2024, 0, 15, 10, 0),
+      duration: 60,
       data: {
         id: "1",
         title: "Meeting",
@@ -128,6 +134,7 @@ describe("CalendarGrid", () => {
         type: "event",
         startTime: new Date(2024, 0, 15, 9, 0),
         endTime: new Date(2024, 0, 15, 10, 0),
+        duration: 60,
         data: {
           id: "1",
           title: "Meeting 1",
@@ -148,6 +155,7 @@ describe("CalendarGrid", () => {
         type: "event",
         startTime: new Date(2024, 0, 15, 9, 30),
         endTime: new Date(2024, 0, 15, 10, 30),
+        duration: 60,
         data: {
           id: "2",
           title: "Meeting 2",
@@ -190,6 +198,7 @@ describe("CalendarGrid", () => {
         type: "event",
         startTime: new Date(2024, 0, 15, 14, 0),
         endTime: new Date(2024, 0, 15, 15, 0),
+        duration: 60,
         data: {
           id: "3",
           title: "New Meeting",
@@ -206,7 +215,6 @@ describe("CalendarGrid", () => {
         },
       },
     ];
-
     rerender(<CalendarGrid {...defaultProps} timeBlocks={newBlocks} />);
     expect(screen.getByText("New Meeting")).toBeInTheDocument();
   });

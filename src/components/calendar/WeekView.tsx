@@ -13,6 +13,7 @@ import { addWeeks, subWeeks, startOfWeek } from "date-fns";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export function WeekView() {
+  console.log('[WEEK VIEW] Component render');
   const { selectedDate, timeBlocks, setSelectedDate } = useCalendar();
   const { currentWeekStart } = useAppStore((state) => state.scroll);
   const setAnchorDate = useAppStore((state) => state.setAnchorDate);
@@ -20,6 +21,13 @@ export function WeekView() {
   // Use infinite scroll hook here to get scrollToDate
   const { scrollRef, renderedDays, visibleDays, isScrolling, scrollToDate } =
     useInfiniteScroll();
+
+  console.log('[WEEK VIEW] Current state:', {
+    selectedDate: selectedDate.toISOString(),
+    currentWeekStart: currentWeekStart?.toISOString(),
+    visibleDaysCount: visibleDays.length,
+    firstVisibleDay: visibleDays[0]?.toISOString(),
+  });
 
   // Use the scroll state's current week start for the week range display
   const weekRange = getWeekRangeString(currentWeekStart || selectedDate);
