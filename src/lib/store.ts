@@ -9,6 +9,7 @@ import type {
   Subtask,
 } from "@/types";
 import { checkTimeConflict, type ConflictInfo } from "./conflict-detection";
+import { addDays, startOfWeek } from "date-fns";
 
 interface UIState {
   theme: "light" | "dark" | "system";
@@ -37,6 +38,12 @@ interface EventState {
   events: Event[];
   selectedDate: Date;
   viewMode: ViewMode;
+}
+
+interface ScrollState {
+  renderedDateRange: { startDate: Date; endDate: Date };
+  anchorDate: Date;
+  currentWeekStart: Date;
 }
 
 interface DragState {
@@ -96,6 +103,14 @@ interface AppState {
     newStartTime: Date,
     newEndTime: Date
   ) => { success: boolean; conflict?: ConflictInfo };
+
+  // Scroll State
+  scroll: ScrollState;
+  setRenderedDateRange: (startDate: Date, endDate: Date) => void;
+  setAnchorDate: (date: Date) => void;
+  setCurrentWeekStart: (date: Date) => void;
+  expandDateRangeLeft: (days: number) => void;
+  expandDateRangeRight: (days: number) => void;
 
   // Drag State
   drag: DragState;
@@ -881,6 +896,59 @@ export const useAppStore = create<AppState>()(
             conflict: conflict.hasConflict ? conflict : undefined,
           };
         },
+
+        // Scroll State
+        scroll: {
+          renderedDateRange: {
+            startDate: addDays(today, -10),
+            endDate: addDays(today, 10),
+          },
+          anchorDate: today,
+          currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),
+        },
+        setRenderedDateRange: (startDate, endDate) =>
+          set((state) => ({
+            scroll: {
+              ...state.scroll,
+              renderedDateRange: {
+                startDate,
+                endDate,
+              },
+            },
+          })),
+        setAnchorDate: (date) =>
+          set((state) => ({
+            scroll: { ...state.scroll, anchorDate: date },
+          })),
+        setCurrentWeekStart: (date) =>
+          set((state) => ({
+            scroll: { ...state.scroll, currentWeekStart: date },
+          })),
+        expandDateRangeLeft: (days) =>
+          set((state) => ({
+            scroll: {
+              ...state.scroll,
+              renderedDateRange: {
+                startDate: addDays(
+                  state.scroll.renderedDateRange.startDate,
+                  -days
+                ),
+                endDate: state.scroll.renderedDateRange.endDate,
+              },
+              anchorDate: addDays(state.scroll.anchorDate, -days),
+            },
+          })),
+        expandDateRangeRight: (days) =>
+          set((state) => ({
+            scroll: {
+              ...state.scroll,
+              renderedDateRange: {
+                startDate: state.scroll.renderedDateRange.startDate,
+                endDate: addDays(state.scroll.renderedDateRange.endDate, days),
+              },
+              anchorDate: addDays(state.scroll.anchorDate, days),
+            },
+          })),
 
         // Drag State
         drag: {

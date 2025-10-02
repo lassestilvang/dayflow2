@@ -8,28 +8,53 @@ import { CalendarGrid } from "./CalendarGrid";
 import { getWeekRangeString } from "@/lib/calendar-utils";
 import { cn } from "@/lib/utils";
 import type { TimeBlock } from "@/types";
+import { useAppStore } from "@/lib/store";
+import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export function WeekView() {
-  const { selectedDate, timeBlocks, setSelectedDate, navigateDate } =
-    useCalendar();
+  const { selectedDate, timeBlocks, setSelectedDate } = useCalendar();
+  const { currentWeekStart } = useAppStore((state) => state.scroll);
+  const setAnchorDate = useAppStore((state) => state.setAnchorDate);
 
-  const weekRange = getWeekRangeString(selectedDate);
+  // Use infinite scroll hook here to get scrollToDate
+  const { scrollRef, renderedDays, visibleDays, isScrolling, scrollToDate } =
+    useInfiniteScroll();
+
+  // Use the scroll state's current week start for the week range display
+  const weekRange = getWeekRangeString(currentWeekStart || selectedDate);
 
   const handlePrevWeek = useCallback(() => {
-    navigateDate("prev");
-  }, [navigateDate]);
+    console.log('[WEEK VIEW] handlePrevWeek called, current selectedDate:', selectedDate);
+    const newDate = subWeeks(selectedDate, 1);
+    console.log('[WEEK VIEW] Setting new date:', newDate);
+    setSelectedDate(newDate);
+    setAnchorDate(startOfWeek(newDate, { weekStartsOn: 1 }));
+    scrollToDate(newDate);
+  }, [selectedDate, setSelectedDate, setAnchorDate, scrollToDate]);
 
   const handleNextWeek = useCallback(() => {
-    navigateDate("next");
-  }, [navigateDate]);
+    console.log('[WEEK VIEW] handleNextWeek called, current selectedDate:', selectedDate);
+    const newDate = addWeeks(selectedDate, 1);
+    console.log('[WEEK VIEW] Setting new date:', newDate);
+    setSelectedDate(newDate);
+    setAnchorDate(startOfWeek(newDate, { weekStartsOn: 1 }));
+    scrollToDate(newDate);
+  }, [selectedDate, setSelectedDate, setAnchorDate, scrollToDate]);
 
   const handleToday = useCallback(() => {
-    setSelectedDate(new Date());
-  }, [setSelectedDate]);
+    console.log('[WEEK VIEW] handleToday called');
+    const today = new Date();
+    console.log('[WEEK VIEW] Today date:', today);
+    setSelectedDate(today);
+    setAnchorDate(startOfWeek(today, { weekStartsOn: 1 }));
+    scrollToDate(today);
+  }, [setSelectedDate, setAnchorDate, scrollToDate]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('[WEEK VIEW] Key pressed:', e.key, 'metaKey:', e.metaKey, 'ctrlKey:', e.ctrlKey);
       if (e.key === "ArrowLeft" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handlePrevWeek();
@@ -48,7 +73,7 @@ export function WeekView() {
 
   const handleTimeSlotClick = (date: Date) => {
     console.log("Time slot clicked:", date);
-    // TODO: Open modal/dialog to create new event
+    // Event modal is already opened by DayColumn/CalendarGrid
   };
 
   const handleBlockClick = (block: TimeBlock) => {
@@ -129,10 +154,13 @@ export function WeekView() {
 
       {/* Calendar Grid */}
       <CalendarGrid
-        date={selectedDate}
         timeBlocks={timeBlocks}
         onTimeSlotClick={handleTimeSlotClick}
         onBlockClick={handleBlockClick}
+        scrollRef={scrollRef}
+        renderedDays={renderedDays}
+        visibleDays={visibleDays}
+        isScrolling={isScrolling}
       />
     </div>
   );
