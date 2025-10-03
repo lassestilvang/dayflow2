@@ -900,8 +900,8 @@ export const useAppStore = create<AppState>()(
         // Scroll State
         scroll: {
           renderedDateRange: {
-            startDate: addDays(today, -17),
-            endDate: addDays(today, 17),
+            startDate: addDays(today, -59),
+            endDate: addDays(today, 59),
           },
           anchorDate: today,
           currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),

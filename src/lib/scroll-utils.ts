@@ -3,11 +3,11 @@ import { addDays, differenceInDays, startOfDay } from "date-fns";
 // Configuration constants for infinite scrolling
 export const SCROLL_CONFIG = {
   VISIBLE_DAYS: 7,
-  BUFFER_DAYS: 14,
-  TOTAL_RENDERED: 35, // 7 visible + 14 buffer on each side
+  BUFFER_DAYS: 56, // Changed from 28 to 56 (8 weeks on each side)
+  TOTAL_RENDERED: 119, // Changed from 63 to 119 (56 + 7 + 56)
   DAY_WIDTH: 200,
-  SCROLL_THRESHOLD: 0.3, // 30% into buffer triggers expansion
-  SCROLL_THROTTLE_MS: 16, // 60fps
+  SCROLL_THRESHOLD: 0.3, // Keep at 30%
+  SCROLL_THROTTLE_MS: 16,
   DAYS_TO_ADD: 7,
 } as const;
 
