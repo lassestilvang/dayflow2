@@ -907,51 +907,25 @@ export const useAppStore = create<AppState>()(
           currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),
         },
         setRenderedDateRange: (startDate, endDate) =>
-          set((state) => {
-            console.log("[STORE] setRenderedDateRange called:", {
-              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
-              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
-              newStart: startDate.toISOString(),
-              newEnd: endDate.toISOString(),
-            });
-            return {
-              scroll: {
-                ...state.scroll,
-                renderedDateRange: {
-                  startDate,
-                  endDate,
-                },
+          set((state) => ({
+            scroll: {
+              ...state.scroll,
+              renderedDateRange: {
+                startDate,
+                endDate,
               },
-            };
-          }),
+            },
+          })),
         setAnchorDate: (date) =>
-          set((state) => {
-            console.log("[STORE] setAnchorDate called:", {
-              old: state.scroll.anchorDate.toISOString(),
-              new: date.toISOString(),
-            });
-            return {
-              scroll: { ...state.scroll, anchorDate: date },
-            };
-          }),
+          set((state) => ({
+            scroll: { ...state.scroll, anchorDate: date },
+          })),
         setCurrentWeekStart: (date) =>
-          set((state) => {
-            console.log("[STORE] setCurrentWeekStart called:", {
-              old: state.scroll.currentWeekStart.toISOString(),
-              new: date.toISOString(),
-            });
-            return {
-              scroll: { ...state.scroll, currentWeekStart: date },
-            };
-          }),
+          set((state) => ({
+            scroll: { ...state.scroll, currentWeekStart: date },
+          })),
         expandDateRangeLeft: (days) =>
           set((state) => {
-            console.log("[STORE] expandDateRangeLeft called:", {
-              days,
-              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
-              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
-              oldAnchor: state.scroll.anchorDate.toISOString(),
-            });
             const newState = {
               scroll: {
                 ...state.scroll,
@@ -965,22 +939,10 @@ export const useAppStore = create<AppState>()(
                 anchorDate: addDays(state.scroll.anchorDate, -days),
               },
             };
-            console.log("[STORE] expandDateRangeLeft result:", {
-              newStart:
-                newState.scroll.renderedDateRange.startDate.toISOString(),
-              newEnd: newState.scroll.renderedDateRange.endDate.toISOString(),
-              newAnchor: newState.scroll.anchorDate.toISOString(),
-            });
             return newState;
           }),
         expandDateRangeRight: (days) =>
           set((state) => {
-            console.log("[STORE] expandDateRangeRight called:", {
-              days,
-              oldStart: state.scroll.renderedDateRange.startDate.toISOString(),
-              oldEnd: state.scroll.renderedDateRange.endDate.toISOString(),
-              oldAnchor: state.scroll.anchorDate.toISOString(),
-            });
             const newState = {
               scroll: {
                 ...state.scroll,
@@ -994,12 +956,6 @@ export const useAppStore = create<AppState>()(
                 anchorDate: addDays(state.scroll.anchorDate, days),
               },
             };
-            console.log("[STORE] expandDateRangeRight result:", {
-              newStart:
-                newState.scroll.renderedDateRange.startDate.toISOString(),
-              newEnd: newState.scroll.renderedDateRange.endDate.toISOString(),
-              newAnchor: newState.scroll.anchorDate.toISOString(),
-            });
             return newState;
           }),
 

@@ -13,7 +13,6 @@ import { addWeeks, subWeeks, startOfWeek } from "date-fns";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export function WeekView() {
-  console.log('[WEEK VIEW] Component render');
   const { selectedDate, timeBlocks, setSelectedDate } = useCalendar();
   const { currentWeekStart } = useAppStore((state) => state.scroll);
   const setAnchorDate = useAppStore((state) => state.setAnchorDate);
@@ -22,38 +21,25 @@ export function WeekView() {
   const { scrollRef, renderedDays, visibleDays, isScrolling, scrollToDate } =
     useInfiniteScroll();
 
-  console.log('[WEEK VIEW] Current state:', {
-    selectedDate: selectedDate.toISOString(),
-    currentWeekStart: currentWeekStart?.toISOString(),
-    visibleDaysCount: visibleDays.length,
-    firstVisibleDay: visibleDays[0]?.toISOString(),
-  });
-
   // Use the scroll state's current week start for the week range display
   const weekRange = getWeekRangeString(currentWeekStart || selectedDate);
 
   const handlePrevWeek = useCallback(() => {
-    console.log('[WEEK VIEW] handlePrevWeek called, current selectedDate:', selectedDate);
     const newDate = subWeeks(selectedDate, 1);
-    console.log('[WEEK VIEW] Setting new date:', newDate);
     setSelectedDate(newDate);
     setAnchorDate(startOfWeek(newDate, { weekStartsOn: 1 }));
     scrollToDate(newDate);
   }, [selectedDate, setSelectedDate, setAnchorDate, scrollToDate]);
 
   const handleNextWeek = useCallback(() => {
-    console.log('[WEEK VIEW] handleNextWeek called, current selectedDate:', selectedDate);
     const newDate = addWeeks(selectedDate, 1);
-    console.log('[WEEK VIEW] Setting new date:', newDate);
     setSelectedDate(newDate);
     setAnchorDate(startOfWeek(newDate, { weekStartsOn: 1 }));
     scrollToDate(newDate);
   }, [selectedDate, setSelectedDate, setAnchorDate, scrollToDate]);
 
   const handleToday = useCallback(() => {
-    console.log('[WEEK VIEW] handleToday called');
     const today = new Date();
-    console.log('[WEEK VIEW] Today date:', today);
     setSelectedDate(today);
     setAnchorDate(startOfWeek(today, { weekStartsOn: 1 }));
     scrollToDate(today);
@@ -62,7 +48,6 @@ export function WeekView() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log('[WEEK VIEW] Key pressed:', e.key, 'metaKey:', e.metaKey, 'ctrlKey:', e.ctrlKey);
       if (e.key === "ArrowLeft" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handlePrevWeek();

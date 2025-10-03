@@ -19,6 +19,8 @@ export function useInfiniteScroll() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isExpandingRef = useRef(false);
   const isInitializedRef = useRef(false);
+  const isInitialScrollingRef = useRef(false);
+  const initialScrollAppliedRef = useRef(false);
 
   // Get scroll state and actions from store
   const { renderedDateRange, currentWeekStart } = useAppStore(
@@ -38,59 +40,15 @@ export function useInfiniteScroll() {
   useEffect(() => {
     // Guard against multiple initializations
     if (isInitializedRef.current) {
-      console.log("[INFINITE SCROLL] Already initialized, skipping");
       return;
     }
 
     isInitializedRef.current = true;
     const today = new Date();
     const range = calculateRenderedRange(today, SCROLL_CONFIG.TOTAL_RENDERED);
-    console.log("[INFINITE SCROLL] ===== INITIALIZATION START =====");
-    console.log("[INFINITE SCROLL] Today:", today.toISOString());
-    console.log("[INFINITE SCROLL] Calculated range:", {
-      startDate: range.startDate.toISOString(),
-      endDate: range.endDate.toISOString(),
-      totalDays: SCROLL_CONFIG.TOTAL_RENDERED,
-      bufferDays: SCROLL_CONFIG.BUFFER_DAYS,
-      visibleDays: SCROLL_CONFIG.VISIBLE_DAYS,
-    });
-
-    console.log("[INFINITE SCROLL] Current store state before init:", {
-      renderedStart: renderedDateRange.startDate.toISOString(),
-      renderedEnd: renderedDateRange.endDate.toISOString(),
-    });
 
     setRenderedDateRange(range.startDate, range.endDate);
     setAnchorDate(today);
-    console.log("[INFINITE SCROLL] Store updated with new range and anchor");
-
-    // Center the view on today after initialization
-    if (scrollRef.current) {
-      const scrollPosition = calculateScrollPosition(
-        today,
-        range.startDate,
-        SCROLL_CONFIG.VISIBLE_DAYS,
-        SCROLL_CONFIG.DAY_WIDTH
-      );
-      console.log(
-        "[INFINITE SCROLL] Calculated initial scroll position:",
-        scrollPosition
-      );
-      console.log(
-        "[INFINITE SCROLL] Days from start to today:",
-        Math.floor(scrollPosition / SCROLL_CONFIG.DAY_WIDTH)
-      );
-      scrollRef.current.scrollLeft = scrollPosition;
-      console.log(
-        "[INFINITE SCROLL] Applied scrollLeft:",
-        scrollRef.current.scrollLeft
-      );
-    } else {
-      console.warn(
-        "[INFINITE SCROLL] scrollRef.current is null during initialization"
-      );
-    }
-    console.log("[INFINITE SCROLL] ===== INITIALIZATION COMPLETE =====");
   }, []); // Empty dependency array - run only once
 
   // Calculate rendered days array
@@ -99,14 +57,73 @@ export function useInfiniteScroll() {
     end: renderedDateRange.endDate,
   });
 
-  console.log(
-    "[INFINITE SCROLL] Rendered days count:",
-    renderedDays.length,
-    "First:",
-    renderedDays[0]?.toISOString(),
-    "Last:",
-    renderedDays[renderedDays.length - 1]?.toISOString()
-  );
+  // Apply initial scroll position after DOM is ready
+  useEffect(() => {
+    // Only run once after initialization and if not already applied
+    if (
+      !isInitializedRef.current ||
+      !scrollRef.current ||
+      initialScrollAppliedRef.current
+    ) {
+      return;
+    }
+
+    // Check if we've already set the initial scroll
+    const alreadyScrolled = scrollRef.current.scrollLeft > 0;
+    if (alreadyScrolled) {
+      initialScrollAppliedRef.current = true;
+      return;
+    }
+
+    // Wait for the scrollable content to be fully rendered
+    const checkAndScroll = () => {
+      if (!scrollRef.current) return;
+
+      const { scrollWidth, clientWidth, scrollLeft } = scrollRef.current;
+
+      // Only proceed if scrollWidth is calculated and we haven't scrolled yet
+      if (scrollWidth > clientWidth && scrollLeft === 0) {
+        const today = new Date();
+        const scrollPosition = calculateScrollPosition(
+          today,
+          renderedDateRange.startDate,
+          SCROLL_CONFIG.VISIBLE_DAYS,
+          SCROLL_CONFIG.DAY_WIDTH
+        );
+
+        // Set flag to prevent expansion during initial scroll
+        isInitialScrollingRef.current = true;
+
+        // Use scrollTo with 'auto' behavior to bypass scroll-smooth CSS
+        scrollRef.current.scrollTo({
+          left: scrollPosition,
+          behavior: "auto",
+        });
+
+        const actualScrollLeft = scrollRef.current.scrollLeft;
+
+        // If browser accepted the scroll, mark as applied
+        if (actualScrollLeft > 0) {
+          initialScrollAppliedRef.current = true;
+        }
+
+        // Clear flag after scroll settles
+        setTimeout(() => {
+          isInitialScrollingRef.current = false;
+        }, 500);
+      } else if (scrollWidth <= clientWidth) {
+        // Content not ready yet, try again
+        requestAnimationFrame(checkAndScroll);
+      }
+    };
+
+    // Start checking after a few frames
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(checkAndScroll);
+      });
+    });
+  }, [renderedDays.length, renderedDateRange.startDate]); // Run when days are rendered
 
   // Calculate visible days based on scroll position
   const visibleDays = calculateVisibleDays(
@@ -129,20 +146,18 @@ export function useInfiniteScroll() {
 
   // Throttled scroll handler
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current || isExpandingRef.current) return;
+    if (
+      !scrollRef.current ||
+      isExpandingRef.current ||
+      isInitialScrollingRef.current
+    ) {
+      return;
+    }
 
     const container = scrollRef.current;
     const currentScrollLeft = container.scrollLeft;
     const totalWidth = container.scrollWidth;
     const containerWidth = container.clientWidth;
-
-    console.log("[SCROLL EVENT]", {
-      scrollLeft: currentScrollLeft,
-      totalWidth,
-      containerWidth,
-      distanceFromRight: totalWidth - currentScrollLeft - containerWidth,
-      isExpanding: isExpandingRef.current,
-    });
 
     setScrollLeft(currentScrollLeft);
     setIsScrolling(true);
@@ -163,7 +178,11 @@ export function useInfiniteScroll() {
       SCROLL_CONFIG.SCROLL_THRESHOLD
     );
     if (shouldExpandL) {
-      console.log("[EXPAND LEFT] Triggered at scrollLeft:", currentScrollLeft);
+      console.log(
+        "[EXPAND LEFT] Triggered - adding",
+        SCROLL_CONFIG.DAYS_TO_ADD,
+        "days"
+      );
       isExpandingRef.current = true;
       const previousScrollLeft = currentScrollLeft;
 
@@ -176,15 +195,7 @@ export function useInfiniteScroll() {
           if (scrollRef.current) {
             const compensation =
               SCROLL_CONFIG.DAYS_TO_ADD * SCROLL_CONFIG.DAY_WIDTH;
-            console.log(
-              "[INFINITE SCROLL] Compensating scroll left by:",
-              compensation
-            );
             scrollRef.current.scrollLeft = previousScrollLeft + compensation;
-            console.log(
-              "[INFINITE SCROLL] New scrollLeft:",
-              previousScrollLeft + compensation
-            );
             isExpandingRef.current = false;
           }
         });
@@ -199,29 +210,12 @@ export function useInfiniteScroll() {
         SCROLL_CONFIG.SCROLL_THRESHOLD
       );
 
-      console.log("[EXPAND RIGHT CHECK]", {
-        shouldExpand: shouldExpandR,
-        scrollLeft: currentScrollLeft,
-        totalWidth,
-        containerWidth,
-        distanceFromRight: totalWidth - currentScrollLeft - containerWidth,
-        threshold: SCROLL_CONFIG.SCROLL_THRESHOLD,
-        bufferWidth: SCROLL_CONFIG.BUFFER_DAYS * SCROLL_CONFIG.DAY_WIDTH,
-        triggerPoint:
-          SCROLL_CONFIG.BUFFER_DAYS *
-          SCROLL_CONFIG.DAY_WIDTH *
-          SCROLL_CONFIG.SCROLL_THRESHOLD,
-      });
-
       if (shouldExpandR) {
         console.log(
-          "[EXPAND RIGHT] Triggered at scrollLeft:",
-          currentScrollLeft
+          "[EXPAND RIGHT] Triggered - adding",
+          SCROLL_CONFIG.DAYS_TO_ADD,
+          "days"
         );
-        console.log("[EXPAND RIGHT] Current rendered range:", {
-          start: renderedDateRange.startDate.toISOString(),
-          end: renderedDateRange.endDate.toISOString(),
-        });
         isExpandingRef.current = true;
         // Expand the date range (no compensation needed for right expansion)
         expandDateRangeRight(SCROLL_CONFIG.DAYS_TO_ADD);
@@ -230,17 +224,11 @@ export function useInfiniteScroll() {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             isExpandingRef.current = false;
-            console.log("[EXPAND RIGHT] Expansion complete, flag reset");
           });
         });
       }
     }
-  }, [
-    scrollLeft,
-    renderedDateRange.startDate,
-    expandDateRangeLeft,
-    expandDateRangeRight,
-  ]);
+  }, [scrollLeft, expandDateRangeLeft, expandDateRangeRight]);
 
   // Set up scroll event listener with throttling
   useEffect(() => {
