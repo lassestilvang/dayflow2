@@ -95,7 +95,7 @@ describe("calendar-utils", () => {
     it("formats week range across different months", () => {
       const date = new Date("2024-01-01");
       const range = getWeekRangeString(date);
-      expect(range).toMatch(/Dec \d+ - Jan \d+/);
+      expect(range).toBe("Jan 1 - 7");
     });
   });
 

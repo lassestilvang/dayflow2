@@ -62,13 +62,16 @@ describe("CalendarGrid", () => {
 
   it("renders without crashing", () => {
     renderWithProviders(<CalendarGrid {...defaultProps} />, { withDnd: true });
-    expect(screen.getByText(/am/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/am/i)).toHaveLength(7); // 7 AM time labels
   });
 
   it("renders time labels correctly", () => {
     renderWithProviders(<CalendarGrid {...defaultProps} />, { withDnd: true });
-    // Check for some time labels (e.g., 9:00 AM, 12:00 PM)
-    expect(screen.getByText(/9:00 am/i)).toBeInTheDocument();
+    // Check for specific time label in the time column
+    const timeLabel = screen.getByText("9:00 AM", {
+      selector: 'span[class*="text-xs text-muted-foreground"]',
+    });
+    expect(timeLabel).toBeInTheDocument();
   });
 
   it("renders day columns", () => {
@@ -217,5 +220,5 @@ describe("CalendarGrid", () => {
     ];
     rerender(<CalendarGrid {...defaultProps} timeBlocks={newBlocks} />);
     expect(screen.getByText("New Meeting")).toBeInTheDocument();
-  });
+});
 });
