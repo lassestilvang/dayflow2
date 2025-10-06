@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import type { TimeBlock, Event, Task } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
@@ -13,25 +13,39 @@ export function useCalendar() {
   const setSelectedDate = useAppStore((state) => state.setSelectedDate);
   const setViewMode = useAppStore((state) => state.setViewMode);
 
-  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  // Memoize time block creation functions to avoid recreating them
+  const createEventBlock = (event: Event): TimeBlock => ({
+    id: event.id,
+    type: "event" as const,
+    data: event,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    duration:
+      (event.endTime.getTime() - event.startTime.getTime()) / (1000 * 60),
+  });
 
-  // Performance logging for hook re-computation
-  console.log(
-    `[HOOK DEBUG] useCalendar re-computed at ${Date.now()}, events length: ${
-      events.length
-    }, tasks length: ${
-      tasks.length
-    }, selectedDate: ${selectedDate}, viewMode: ${viewMode}`
-  );
+  const createTaskBlock = (task: Task): TimeBlock => {
+    const startTime = task.scheduledTime!;
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
+    return {
+      id: task.id,
+      type: "task" as const,
+      data: task,
+      startTime,
+      endTime,
+      duration: 60,
+    };
+  };
 
-  useEffect(() => {
+  // Memoize timeBlocks computation to prevent re-conversion on every state change
+  const timeBlocks = useMemo(() => {
     const startTime = performance.now();
     // Defensive check: ensure events is an array
     if (!Array.isArray(events)) {
       console.warn(
         "Events is not an array during hydration, skipping time block conversion"
       );
-      return;
+      return [];
     }
 
     // Defensive check: ensure tasks is an array
@@ -39,32 +53,8 @@ export function useCalendar() {
       console.warn(
         "Tasks is not an array during hydration, skipping time block conversion"
       );
-      return;
+      return [];
     }
-
-    // Memoize time block creation functions to avoid recreating them
-    const createEventBlock = (event: Event): TimeBlock => ({
-      id: event.id,
-      type: "event" as const,
-      data: event,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      duration:
-        (event.endTime.getTime() - event.startTime.getTime()) / (1000 * 60),
-    });
-
-    const createTaskBlock = (task: Task): TimeBlock => {
-      const startTime = task.scheduledTime!;
-      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
-      return {
-        id: task.id,
-        type: "task" as const,
-        data: task,
-        startTime,
-        endTime,
-        duration: 60,
-      };
-    };
 
     // Convert events to time blocks
     const eventBlocks: TimeBlock[] = events.map(createEventBlock);
@@ -75,7 +65,7 @@ export function useCalendar() {
     );
     const taskBlocks: TimeBlock[] = scheduledTasks.map(createTaskBlock);
 
-    setTimeBlocks([...eventBlocks, ...taskBlocks]);
+    const result = [...eventBlocks, ...taskBlocks];
     const endTime = performance.now();
     console.log(
       `[HOOK PERF] useCalendar timeBlocks: ${endTime - startTime}ms for ${
@@ -84,7 +74,16 @@ export function useCalendar() {
         eventBlocks.length + taskBlocks.length
       } blocks`
     );
+    return result;
   }, [events, tasks]);
+  // Performance logging for hook re-computation
+  console.log(
+    `[HOOK DEBUG] useCalendar re-computed at ${Date.now()}, events length: ${
+      events.length
+    }, tasks length: ${
+      tasks.length
+    }, selectedDate: ${selectedDate}, viewMode: ${viewMode}`
+  );
 
   // Memoize week days calculation
   const getWeekDays = useMemo(() => {
@@ -121,7 +120,7 @@ export function useCalendar() {
     timeBlocks,
     setSelectedDate,
     setViewMode,
-    getWeekDays: getWeekDays(),
+    getWeekDays,
     navigateDate,
   };
 }

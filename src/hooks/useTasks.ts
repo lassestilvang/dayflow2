@@ -179,5 +179,6 @@ export function useTasks() {
     selectedCategory,
     setTaskFilters,
     setSelectedCategory,
+    loading: false, // TODO: Implement loading state when fetching from API
   };
 }
