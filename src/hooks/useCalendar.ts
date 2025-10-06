@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import type { TimeBlock } from "@/types";
+import type { TimeBlock, Event, Task } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 
 export function useCalendar() {
