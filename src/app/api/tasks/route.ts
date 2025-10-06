@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
-export async function GET(_request: NextRequest) {
+export async function GET(_request: NextRequest) { // eslint-disable-line @typescript-eslint/no-unused-vars
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest) {
       .where(eq(tasks.userId, session.user.id));
 
     return NextResponse.json(userTasks);
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch tasks" },
       { status: 500 }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       .returning();
 
     return NextResponse.json(newTask[0], { status: 201 });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 }
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json(updatedTask[0]);
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update task" },
       { status: 500 }
@@ -101,7 +101,7 @@ export async function DELETE(request: NextRequest) {
       .where(and(eq(tasks.id, id), eq(tasks.userId, session.user.id)));
 
     return NextResponse.json({ success: true });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete task" },
       { status: 500 }

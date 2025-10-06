@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { events } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -16,10 +16,11 @@ export async function GET(_request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     // Get total count for pagination metadata
-    const totalCount = await db.$count(
-      events,
-      eq(events.userId, session.user.id)
-    );
+    const totalCountResult = await db
+      .select({ count: count() })
+      .from(events)
+      .where(eq(events.userId, session.user.id));
+    const totalCount = totalCountResult[0]?.count ?? 0;
 
     const userEvents = await db
       .select()
@@ -126,5 +127,6 @@ export async function DELETE(_request: NextRequest) {
     return NextResponse.json(
       { error: "Failed to delete event" },
       { status: 500 }
+    );
   }
 }
