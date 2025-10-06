@@ -1,4 +1,4 @@
-import { create } from "zustand";
+  import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type {
   Task,
@@ -900,8 +900,8 @@ export const useAppStore = create<AppState>()(
         // Scroll State
         scroll: {
           renderedDateRange: {
-            startDate: addDays(today, -59),
-            endDate: addDays(today, 59),
+            startDate: today,
+            endDate: addDays(today, 118),
           },
           anchorDate: today,
           currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),

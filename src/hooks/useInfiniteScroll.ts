@@ -2,10 +2,15 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
-import { eachDayOfInterval, startOfWeek } from "date-fns";
+import {
+  eachDayOfInterval,
+  startOfWeek,
+  differenceInDays,
+  addDays,
+  startOfDay,
+} from "date-fns";
 import {
   SCROLL_CONFIG,
-  calculateRenderedRange,
   calculateVisibleDays,
   calculateScrollPosition,
   shouldExpandLeft,
@@ -36,7 +41,7 @@ export function useInfiniteScroll() {
     (state) => state.expandDateRangeRight
   );
 
-  // Initialize with 21-day range centered on today
+  // Initialize with 21-day range starting from today
   useEffect(() => {
     // Guard against multiple initializations
     if (isInitializedRef.current) {
@@ -45,9 +50,10 @@ export function useInfiniteScroll() {
 
     isInitializedRef.current = true;
     const today = new Date();
-    const range = calculateRenderedRange(today, SCROLL_CONFIG.TOTAL_RENDERED);
+    const startDate = startOfDay(today);
+    const endDate = addDays(startDate, SCROLL_CONFIG.TOTAL_RENDERED - 1);
 
-    setRenderedDateRange(range.startDate, range.endDate);
+    setRenderedDateRange(startDate, endDate);
     setAnchorDate(today);
   }, []); // Empty dependency array - run only once
 
@@ -84,20 +90,15 @@ export function useInfiniteScroll() {
       // Only proceed if scrollWidth is calculated and we haven't scrolled yet
       if (scrollWidth > clientWidth && scrollLeft === 0) {
         const today = new Date();
-        const scrollPosition = calculateScrollPosition(
-          today,
-          renderedDateRange.startDate,
-          SCROLL_CONFIG.VISIBLE_DAYS,
-          SCROLL_CONFIG.DAY_WIDTH
-        );
+        const dayOffset = differenceInDays(today, renderedDateRange.startDate);
+        const scrollPosition = dayOffset * SCROLL_CONFIG.DAY_WIDTH;
 
         // Set flag to prevent expansion during initial scroll
         isInitialScrollingRef.current = true;
 
-        // Use scrollTo with 'auto' behavior to bypass scroll-smooth CSS
+        // Use scrollTo without behavior property to jump instantly
         scrollRef.current.scrollTo({
           left: scrollPosition,
-          behavior: "auto",
         });
 
         const actualScrollLeft = scrollRef.current.scrollLeft;
