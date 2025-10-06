@@ -18,18 +18,14 @@ test.describe("Event Management", () => {
       // Try to click on a time slot (day 1, hour 10)
       try {
         await clickTimeSlot(page, 1, 10);
-      } catch (_e) {
+      } catch {
         // Fallback: use Add button
         await page.click('button:has-text("Add")');
       }
 
       // Wait for event modal
       await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
-
       // Check if this is the event modal (not task modal)
-      const _modalTitle = await page
-        .locator('[role="dialog"] h2, [role="dialog"] [class*="title"]')
-        .textContent();
 
       // Fill in event details
       await page.fill(
@@ -646,9 +642,6 @@ test.describe("Event Management", () => {
         await eventBlock.click();
 
         // Look for source indicator (e.g., "Manual" or local icon)
-        const _sourceIndicator = page.locator(
-          'text="Manual", text="manual", [data-source="manual"]'
-        );
 
         // Just verify modal opened
         const modal = page.locator('[role="dialog"]');

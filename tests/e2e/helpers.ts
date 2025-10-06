@@ -101,7 +101,7 @@ export async function clickTimeSlot(
     try {
       await page.click(selector, { timeout: 2000 });
       return;
-    } catch (_e) {
+    } catch {
       continue;
     }
   }

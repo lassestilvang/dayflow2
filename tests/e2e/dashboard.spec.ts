@@ -61,8 +61,6 @@ test.describe("Dashboard and Navigation", () => {
     });
 
     test("current day is highlighted", async ({ page }) => {
-      const today = new Date();
-      const _dayOfWeek = today.getDay();
       // Look for current day indicator
       const currentDayIndicator = page.locator(
         '[class*="current"], [class*="today"], [aria-current="date"]'
@@ -308,7 +306,6 @@ test.describe("Dashboard and Navigation", () => {
 
     test("navigation has proper ARIA labels", async ({ page }) => {
       const nextButton = page.locator('button[aria-label*="next" i]');
-      const _prevButton = page.locator('button[aria-label*="prev" i]');
 
       if (await nextButton.isVisible({ timeout: 2000 })) {
         const ariaLabel = await nextButton.getAttribute("aria-label");

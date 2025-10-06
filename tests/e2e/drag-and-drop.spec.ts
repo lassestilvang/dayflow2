@@ -16,8 +16,6 @@ test.describe("Drag and Drop", () => {
         .first();
 
       if (await unscheduledTask.isVisible({ timeout: 3000 })) {
-        const _taskTitle = await unscheduledTask.textContent();
-
         // Get task position
         const taskBox = await unscheduledTask.boundingBox();
         if (!taskBox) return;

@@ -131,7 +131,6 @@ test.describe("Responsive Design - Mobile Experience", () => {
     test("all sidebars visible on desktop", async ({ page }) => {
       await navigateToDashboard(page);
 
-      const _navSidebar = page.locator("aside nav");
       const taskSidebar = page.locator('aside:has(text("Tasks"))');
 
       if (page.viewportSize()!.width >= 1280) {
