@@ -63,7 +63,7 @@ export default function DashboardPage() {
         endTime: events[0]?.endTime,
       });
     }
-  }, []);
+  }, [tasks, events]);
 
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [pendingDrop, setPendingDrop] = useState<{
@@ -105,7 +105,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDragOver = (_event: DragOverEvent) => {
+  const handleDragOver = () => {
     // Optional: Add visual feedback while dragging over drop zones
   };
 
