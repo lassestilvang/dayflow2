@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import { isBefore, startOfDay } from "date-fns";
 
@@ -10,8 +10,6 @@ export function useTasks() {
   );
   const setTaskFilters = useAppStore((state) => state.setTaskFilters);
   const setSelectedCategory = useAppStore((state) => state.setSelectedCategory);
-
-  const [_loading, _setLoading] = useState(false);
 
   // Performance logging for hook re-computation
   console.log(
