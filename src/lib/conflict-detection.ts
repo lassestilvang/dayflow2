@@ -93,11 +93,7 @@ export function checkTimeConflict(
   }
 
   // Generate suggestions
-  const suggestions = generateConflictSuggestions(
-    conflicts,
-    newStartTime,
-    newEndTime
-  );
+  const suggestions = generateConflictSuggestions(conflicts);
 
   return {
     hasConflict: conflicts.length > 0,
@@ -109,11 +105,7 @@ export function checkTimeConflict(
 /**
  * Generate helpful suggestions for resolving conflicts
  */
-function generateConflictSuggestions(
-  conflicts: (Event | Task)[],
-  _newStartTime: Date,
-  _newEndTime: Date
-): string[] {
+function generateConflictSuggestions(conflicts: (Event | Task)[]): string[] {
   const suggestions: string[] = [];
 
   if (conflicts.length === 0) {
