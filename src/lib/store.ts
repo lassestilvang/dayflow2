@@ -1,4 +1,4 @@
-  import { create } from "zustand";
+import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type {
   Task,
@@ -133,6 +133,25 @@ const getDate = (dayOffset: number, hour: number, minute: number = 0) => {
   date.setDate(date.getDate() + dayOffset);
   date.setHours(hour, minute, 0, 0);
   return date;
+};
+
+// Performance logging helper
+const logPerformance = (action: string, data?: unknown) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `[STORE PERF] ${action}`,
+      data
+        ? {
+            dataSize: Array.isArray(data)
+              ? data.length
+              : typeof data === "object"
+              ? Object.keys(data).length
+              : "N/A",
+            timestamp: Date.now(),
+          }
+        : ""
+    );
+  }
 };
 
 // Sample Events
@@ -707,27 +726,36 @@ export const useAppStore = create<AppState>()(
           selectedCategory: null,
         },
         setTasks: (tasks) =>
-          set((state) => ({
-            tasks: { ...state.tasks, tasks },
-          })),
+          set((state) => {
+            logPerformance("setTasks", tasks);
+            return {
+              tasks: { ...state.tasks, tasks },
+            };
+          }),
         addTask: (task) =>
-          set((state) => ({
-            tasks: {
-              ...state.tasks,
-              tasks: [...state.tasks.tasks, task],
-            },
-          })),
+          set((state) => {
+            logPerformance("addTask", task);
+            return {
+              tasks: {
+                ...state.tasks,
+                tasks: [...state.tasks.tasks, task],
+              },
+            };
+          }),
         updateTask: (id, updates) =>
-          set((state) => ({
-            tasks: {
-              ...state.tasks,
-              tasks: state.tasks.tasks.map((task) =>
-                task.id === id
-                  ? { ...task, ...updates, updatedAt: new Date() }
-                  : task
-              ),
-            },
-          })),
+          set((state) => {
+            logPerformance("updateTask", { id, updates });
+            return {
+              tasks: {
+                ...state.tasks,
+                tasks: state.tasks.tasks.map((task) =>
+                  task.id === id
+                    ? { ...task, ...updates, updatedAt: new Date() }
+                    : task
+                ),
+              },
+            };
+          }),
         deleteTask: (id) =>
           set((state) => ({
             tasks: {

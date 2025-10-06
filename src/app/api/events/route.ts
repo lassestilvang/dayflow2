@@ -11,12 +11,33 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(_request.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100); // Max 100 items
+    const offset = parseInt(searchParams.get("offset") || "0");
+
+    // Get total count for pagination metadata
+    const totalCount = await db.$count(
+      events,
+      eq(events.userId, session.user.id)
+    );
+
     const userEvents = await db
       .select()
       .from(events)
-      .where(eq(events.userId, session.user.id));
+      .where(eq(events.userId, session.user.id))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(events.startTime); // Order by start time for consistency
 
-    return NextResponse.json(userEvents);
+    return NextResponse.json({
+      data: userEvents,
+      pagination: {
+        total: totalCount,
+        limit,
+        offset,
+        hasMore: offset + limit < totalCount,
+      },
+    });
   } catch (_error) {
     return NextResponse.json(
       { error: "Failed to fetch events" },
@@ -105,6 +126,5 @@ export async function DELETE(_request: NextRequest) {
     return NextResponse.json(
       { error: "Failed to delete event" },
       { status: 500 }
-    );
   }
 }

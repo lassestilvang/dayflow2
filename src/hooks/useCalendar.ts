@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import type { TimeBlock } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
@@ -15,21 +15,35 @@ export function useCalendar() {
 
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
 
+  // Performance logging for hook re-computation
+  console.log(
+    `[HOOK DEBUG] useCalendar re-computed at ${Date.now()}, events length: ${
+      events.length
+    }, tasks length: ${
+      tasks.length
+    }, selectedDate: ${selectedDate}, viewMode: ${viewMode}`
+  );
+
   useEffect(() => {
+    const startTime = performance.now();
     // Defensive check: ensure events is an array
     if (!Array.isArray(events)) {
-      console.warn("Events is not an array during hydration, skipping time block conversion");
+      console.warn(
+        "Events is not an array during hydration, skipping time block conversion"
+      );
       return;
     }
 
     // Defensive check: ensure tasks is an array
     if (!Array.isArray(tasks)) {
-      console.warn("Tasks is not an array during hydration, skipping time block conversion");
+      console.warn(
+        "Tasks is not an array during hydration, skipping time block conversion"
+      );
       return;
     }
 
-    // Convert events to time blocks
-    const eventBlocks: TimeBlock[] = events.map((event) => ({
+    // Memoize time block creation functions to avoid recreating them
+    const createEventBlock = (event: Event): TimeBlock => ({
       id: event.id,
       type: "event" as const,
       data: event,
@@ -37,32 +51,49 @@ export function useCalendar() {
       endTime: event.endTime,
       duration:
         (event.endTime.getTime() - event.startTime.getTime()) / (1000 * 60),
-    }));
+    });
 
-    // Convert tasks with scheduled times to time blocks
-    const taskBlocks: TimeBlock[] = tasks
-      .filter((task) => task.scheduledTime && !task.isCompleted)
-      .map((task) => {
-        const startTime = task.scheduledTime!;
-        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
-        return {
-          id: task.id,
-          type: "task" as const,
-          data: task,
-          startTime,
-          endTime,
-          duration: 60,
-        };
-      });
+    const createTaskBlock = (task: Task): TimeBlock => {
+      const startTime = task.scheduledTime!;
+      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
+      return {
+        id: task.id,
+        type: "task" as const,
+        data: task,
+        startTime,
+        endTime,
+        duration: 60,
+      };
+    };
+
+    // Convert events to time blocks
+    const eventBlocks: TimeBlock[] = events.map(createEventBlock);
+
+    // Convert tasks with scheduled times to time blocks - filter first for performance
+    const scheduledTasks = tasks.filter(
+      (task) => task.scheduledTime && !task.isCompleted
+    );
+    const taskBlocks: TimeBlock[] = scheduledTasks.map(createTaskBlock);
 
     setTimeBlocks([...eventBlocks, ...taskBlocks]);
+    const endTime = performance.now();
+    console.log(
+      `[HOOK PERF] useCalendar timeBlocks: ${endTime - startTime}ms for ${
+        events.length
+      } events + ${tasks.length} tasks -> ${
+        eventBlocks.length + taskBlocks.length
+      } blocks`
+    );
   }, [events, tasks]);
 
-  const getWeekDays = () => {
-    const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
-    const end = endOfWeek(selectedDate, { weekStartsOn: 1 });
-    return eachDayOfInterval({ start, end });
-  };
+  // Memoize week days calculation
+  const getWeekDays = useMemo(() => {
+    return () => {
+      const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      const end = endOfWeek(selectedDate, { weekStartsOn: 1 });
+      return eachDayOfInterval({ start, end });
+    };
+  }, [selectedDate]);
 
   const navigateDate = (direction: "prev" | "next") => {
     const currentDate = new Date(selectedDate);
@@ -90,7 +121,7 @@ export function useCalendar() {
     timeBlocks,
     setSelectedDate,
     setViewMode,
-    getWeekDays,
+    getWeekDays: getWeekDays(),
     navigateDate,
   };
 }
