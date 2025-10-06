@@ -55,7 +55,7 @@ export function useInfiniteScroll() {
 
     setRenderedDateRange(startDate, endDate);
     setAnchorDate(today);
-  }, []); // Empty dependency array - run only once
+  }, [setAnchorDate, setRenderedDateRange]); // Empty dependency array - run only once
 
   // Calculate rendered days array
   const renderedDays = eachDayOfInterval({
@@ -229,7 +229,7 @@ export function useInfiniteScroll() {
         });
       }
     }
-  }, [scrollLeft, expandDateRangeLeft, expandDateRangeRight]);
+  }, [expandDateRangeLeft, expandDateRangeRight]);
 
   // Set up scroll event listener with throttling
   useEffect(() => {
