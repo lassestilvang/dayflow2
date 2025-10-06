@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest) {
         hasMore: offset + limit < totalCount,
       },
     });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch events" },
       { status: 500 }
@@ -64,7 +64,7 @@ export async function POST(_request: NextRequest) {
       .returning();
 
     return NextResponse.json(newEvent[0], { status: 201 });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create event" },
       { status: 500 }
@@ -93,7 +93,7 @@ export async function PATCH(_request: NextRequest) {
     }
 
     return NextResponse.json(updatedEvent[0]);
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update event" },
       { status: 500 }
@@ -123,7 +123,7 @@ export async function DELETE(_request: NextRequest) {
       .where(and(eq(events.id, id), eq(events.userId, session.user.id)));
 
     return NextResponse.json({ success: true });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete event" },
       { status: 500 }

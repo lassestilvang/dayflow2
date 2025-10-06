@@ -12,7 +12,6 @@ import {
   closestCenter,
   type DragStartEvent,
   type DragEndEvent,
-  type DragOverEvent,
 } from "@dnd-kit/core";
 import { useAppStore } from "@/lib/store";
 import { TopBar } from "@/components/layout/TopBar";
