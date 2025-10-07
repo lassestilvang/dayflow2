@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { format, isToday } from "date-fns";
@@ -12,13 +10,12 @@ import {
   getHourSlots,
   calculateEventPosition,
   getBlocksForDay,
-  groupOverlappingBlocks,
   createTimeOnDay,
 } from "@/lib/calendar-utils";
 
 interface DayColumnProps {
   date: Date;
-  timeBlocks: TimeBlockType[];
+  timeBlocks: TimeBlockType[][];
   onTimeSlotClick?: (date: Date) => void;
   onBlockClick?: (block: TimeBlockType) => void;
 }
@@ -94,19 +91,18 @@ export const DayColumn = React.memo(function DayColumn({
 
   // Get blocks for this specific day and calculate positions
   const dayBlocks = useMemo(() => {
-    const blocks = getBlocksForDay(timeBlocks, date);
-    const groups = groupOverlappingBlocks(blocks);
+    const blocks = getBlocksForDay(timeBlocks.flat(), date);
 
     return blocks.map((block) => {
       const position = calculateEventPosition(block.data);
 
       // Find which group this block belongs to
-      const groupIndex = groups.findIndex((group) =>
+      const groupIndex = timeBlocks.findIndex((group) =>
         group.some((b) => b.id === block.id)
       );
 
       if (groupIndex !== -1) {
-        const group = groups[groupIndex];
+        const group = timeBlocks[groupIndex];
         if (!group) {
           return {
             block,

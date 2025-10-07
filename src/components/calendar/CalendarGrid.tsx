@@ -10,13 +10,12 @@ import { getHourSlots, getCurrentTimePosition } from "@/lib/calendar-utils";
 import { SCROLL_CONFIG } from "@/lib/scroll-utils";
 
 interface CalendarGridProps {
-  timeBlocks: TimeBlockType[];
+  timeBlocks: TimeBlockType[][];
   onTimeSlotClick?: (date: Date) => void;
   onBlockClick?: (block: TimeBlockType) => void;
   scrollRef: RefObject<HTMLDivElement>;
   renderedDays: Date[];
   visibleDays: Date[];
-  isScrolling: boolean;
 }
 
 export function CalendarGrid({
@@ -26,7 +25,6 @@ export function CalendarGrid({
   scrollRef,
   renderedDays,
   visibleDays,
-  isScrolling,
 }: CalendarGridProps) {
   const [mounted, setMounted] = useState(false);
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
@@ -66,13 +64,7 @@ export function CalendarGrid({
       {/* Horizontal scroll container */}
       <div
         ref={scrollRef}
-        className={cn(
-          "flex-1 overflow-x-auto overflow-y-auto",
-          "scroll-smooth"
-        )}
-        style={{
-          scrollBehavior: isScrolling ? "auto" : "smooth",
-        }}
+        className={cn("flex-1 overflow-x-auto overflow-y-auto")}
       >
         <div className="flex" style={{ minHeight: `${88 + hourSlots.length * 60}px` }}>
           {/* Time labels column (fixed on left) */}

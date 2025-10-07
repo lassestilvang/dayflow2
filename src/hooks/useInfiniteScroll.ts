@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import {
@@ -17,9 +15,7 @@ import {
   shouldExpandRight,
 } from "@/lib/scroll-utils";
 
-export function useInfiniteScroll() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
+export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
   const [scrollLeft, setScrollLeft] = useState(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isExpandingRef = useRef(false);
@@ -161,17 +157,11 @@ export function useInfiniteScroll() {
     const containerWidth = container.clientWidth;
 
     setScrollLeft(currentScrollLeft);
-    setIsScrolling(true);
 
     // Clear previous timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
-
-    // Set scrolling to false after scrolling stops
-    scrollTimeoutRef.current = setTimeout(() => {
-      setIsScrolling(false);
-    }, 150);
 
     // Check if we need to expand left
     const shouldExpandL = shouldExpandLeft(
@@ -289,10 +279,8 @@ export function useInfiniteScroll() {
   );
 
   return {
-    scrollRef,
     renderedDays,
     visibleDays,
     scrollToDate,
-    isScrolling,
   };
 }

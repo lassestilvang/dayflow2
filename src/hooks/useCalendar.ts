@@ -1,9 +1,9 @@
-"use client";
-
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import type { TimeBlock, Event, Task } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { useInfiniteScroll } from "./useInfiniteScroll";
+import { groupOverlappingBlocks } from "@/lib/calendar-utils";
 
 export function useCalendar() {
   const { events, selectedDate, viewMode } = useAppStore(
@@ -12,6 +12,10 @@ export function useCalendar() {
   const tasks = useAppStore((state) => state.tasks.tasks);
   const setSelectedDate = useAppStore((state) => state.setSelectedDate);
   const setViewMode = useAppStore((state) => state.setViewMode);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { renderedDays, visibleDays, scrollToDate } =
+    useInfiniteScroll(scrollRef);
 
   // Memoize time block creation functions to avoid recreating them
   const createEventBlock = (event: Event): TimeBlock => ({
@@ -76,6 +80,11 @@ export function useCalendar() {
     );
     return result;
   }, [events, tasks]);
+
+  const groupedTimeBlocks = useMemo(() => {
+    return groupOverlappingBlocks(timeBlocks);
+  }, [timeBlocks]);
+
   // Performance logging for hook re-computation
   console.log(
     `[HOOK DEBUG] useCalendar re-computed at ${Date.now()}, events length: ${
@@ -117,10 +126,14 @@ export function useCalendar() {
   return {
     selectedDate,
     viewMode,
-    timeBlocks,
+    timeBlocks: groupedTimeBlocks,
     setSelectedDate,
     setViewMode,
     getWeekDays,
     navigateDate,
+    scrollRef,
+    renderedDays,
+    visibleDays,
+    scrollToDate,
   };
 }
