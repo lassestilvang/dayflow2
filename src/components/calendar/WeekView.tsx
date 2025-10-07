@@ -1,14 +1,9 @@
-"use client";
-
-import { useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { useCalendar } from "@/hooks/useCalendar";
 import { CalendarGrid } from "./CalendarGrid";
 import { TimeBlock } from "@/types";
 
 export function WeekView() {
-  const { scrollRef, renderedDays, visibleDays, timeBlocks, scrollToDate } =
+  const { scrollRef, renderedDays, visibleDays, timeBlocks, isScrolling, scrollToDate } =
     useCalendar();
 
   const handleTimeSlotClick = (date: Date) => {
@@ -27,6 +22,7 @@ export function WeekView() {
       scrollRef={scrollRef}
       renderedDays={renderedDays}
       visibleDays={visibleDays}
+      isScrolling={isScrolling}
     />
   );
 }

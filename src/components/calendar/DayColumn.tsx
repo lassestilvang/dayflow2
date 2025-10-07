@@ -10,12 +10,13 @@ import {
   getHourSlots,
   calculateEventPosition,
   getBlocksForDay,
+  groupOverlappingBlocks,
   createTimeOnDay,
 } from "@/lib/calendar-utils";
 
 interface DayColumnProps {
   date: Date;
-  timeBlocks: TimeBlockType[][];
+  timeBlocks: TimeBlockType[];
   onTimeSlotClick?: (date: Date) => void;
   onBlockClick?: (block: TimeBlockType) => void;
 }
@@ -91,18 +92,19 @@ export const DayColumn = React.memo(function DayColumn({
 
   // Get blocks for this specific day and calculate positions
   const dayBlocks = useMemo(() => {
-    const blocks = getBlocksForDay(timeBlocks.flat(), date);
+    const blocks = getBlocksForDay(timeBlocks, date);
+    const groups = groupOverlappingBlocks(blocks);
 
-    const result = blocks.map((block) => {
+    return blocks.map((block) => {
       const position = calculateEventPosition(block.data);
 
       // Find which group this block belongs to
-      const groupIndex = timeBlocks.findIndex((group) =>
+      const groupIndex = groups.findIndex((group) =>
         group.some((b) => b.id === block.id)
       );
 
       if (groupIndex !== -1) {
-        const group = timeBlocks[groupIndex];
+        const group = groups[groupIndex];
         if (!group) {
           return {
             block,
@@ -132,7 +134,6 @@ export const DayColumn = React.memo(function DayColumn({
         width: 100,
       };
     });
-    return result;
   }, [date, timeBlocks]);
 
   // Check if a time slot has any blocks
