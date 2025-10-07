@@ -43,7 +43,6 @@ export function useCalendar() {
 
   // Memoize timeBlocks computation to prevent re-conversion on every state change
   const timeBlocks = useMemo(() => {
-    const startTime = performance.now();
     // Defensive check: ensure events is an array
     if (!Array.isArray(events)) {
       console.warn(
@@ -70,37 +69,13 @@ export function useCalendar() {
     const taskBlocks: TimeBlock[] = scheduledTasks.map(createTaskBlock);
 
     const result = [...eventBlocks, ...taskBlocks];
-    const endTime = performance.now();
-    console.log(
-      `[HOOK PERF] useCalendar timeBlocks: ${endTime - startTime}ms for ${
-        events.length
-      } events + ${tasks.length} tasks -> ${
-        eventBlocks.length + taskBlocks.length
-      } blocks`
-    );
     return result;
   }, [events, tasks]);
 
   const groupedTimeBlocks = useMemo(() => {
-    const startTime = performance.now();
     const result = groupOverlappingBlocks(timeBlocks);
-    const endTime = performance.now();
-    console.log(
-      `[HOOK PERF] useCalendar groupedTimeBlocks: ${endTime - startTime}ms for ${
-        timeBlocks.length
-      } blocks`
-    );
     return result;
   }, [timeBlocks]);
-
-  // Performance logging for hook re-computation
-  console.log(
-    `[HOOK DEBUG] useCalendar re-computed at ${Date.now()}, events length: ${
-      events.length
-    }, tasks length: ${
-      tasks.length
-    }, selectedDate: ${selectedDate}, viewMode: ${viewMode}`
-  );
 
   // Memoize week days calculation
   const getWeekDays = useMemo(() => {

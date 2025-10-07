@@ -91,7 +91,6 @@ export const DayColumn = React.memo(function DayColumn({
 
   // Get blocks for this specific day and calculate positions
   const dayBlocks = useMemo(() => {
-    const startTime = performance.now();
     const blocks = getBlocksForDay(timeBlocks.flat(), date);
 
     const result = blocks.map((block) => {
@@ -133,10 +132,6 @@ export const DayColumn = React.memo(function DayColumn({
         width: 100,
       };
     });
-    const endTime = performance.now();
-    console.log(
-      `[PERF] DayColumn ${format(date, "yyyy-MM-dd")} dayBlocks: ${endTime - startTime}ms for ${blocks.length} blocks`
-    );
     return result;
   }, [date, timeBlocks]);
 

@@ -26,7 +26,6 @@ export function CalendarGrid({
   renderedDays,
   visibleDays,
 }: CalendarGridProps) {
-  const startTime = performance.now();
   const [mounted, setMounted] = useState(false);
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
   const hourSlots = useMemo(() => getHourSlots(), []);
@@ -59,11 +58,6 @@ export function CalendarGrid({
   // Calculate the left position of the current time indicator
   const currentTimeLeft =
     todayIndex >= 0 ? 80 + todayIndex * SCROLL_CONFIG.DAY_WIDTH : 0;
-
-  useEffect(() => {
-    const endTime = performance.now();
-    console.log(`[PERF] CalendarGrid render: ${endTime - startTime}ms`);
-  });
 
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
