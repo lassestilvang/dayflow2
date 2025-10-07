@@ -82,7 +82,15 @@ export function useCalendar() {
   }, [events, tasks]);
 
   const groupedTimeBlocks = useMemo(() => {
-    return groupOverlappingBlocks(timeBlocks);
+    const startTime = performance.now();
+    const result = groupOverlappingBlocks(timeBlocks);
+    const endTime = performance.now();
+    console.log(
+      `[HOOK PERF] useCalendar groupedTimeBlocks: ${endTime - startTime}ms for ${
+        timeBlocks.length
+      } blocks`
+    );
+    return result;
   }, [timeBlocks]);
 
   // Performance logging for hook re-computation
