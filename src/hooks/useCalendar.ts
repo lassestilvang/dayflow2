@@ -92,9 +92,7 @@ export function useCalendar() {
     return result;
   }, [events, tasks]);
 
-  const groupedTimeBlocks = useMemo(() => {
-    return groupOverlappingBlocks(timeBlocks);
-  }, [timeBlocks]);
+  
 
   return {
     selectedDate,
