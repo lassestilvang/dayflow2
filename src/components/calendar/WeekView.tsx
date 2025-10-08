@@ -3,7 +3,7 @@ import { CalendarGrid } from "./CalendarGrid";
 import { TimeBlock } from "@/types";
 
 export function WeekView() {
-  const { scrollRef, renderedDays, visibleDays, timeBlocks, isScrolling, scrollToDate } =
+  const { scrollRef, renderedDays, visibleDays, timeBlocks, isScrolling } =
     useCalendar();
 
   const handleTimeSlotClick = (date: Date) => {
