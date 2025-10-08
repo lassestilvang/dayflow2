@@ -14,10 +14,8 @@ export function useCalendar() {
   const setViewMode = useAppStore((state) => state.setViewMode);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-      const { renderedDays, visibleDays, scrollToDate, isScrolling } =
-    useInfiniteScroll(scrollRef);</search>
-</search>
-
+  const { renderedDays, visibleDays, scrollToDate, isScrolling } =
+    useInfiniteScroll(scrollRef);
 
   // Update refs
   const prevEventsRef = useRef(events);
@@ -134,5 +132,6 @@ export function useCalendar() {
     renderedDays,
     visibleDays,
     scrollToDate,
+    isScrolling,
   };
 }
