@@ -3,12 +3,13 @@ import { useAppStore } from "@/lib/store";
 import {
   eachDayOfInterval,
   startOfWeek,
-  differenceInDays,
   addDays,
   startOfDay,
+  differenceInDays,
 } from "date-fns";
 import {
   SCROLL_CONFIG,
+  calculateRenderedRange,
   calculateVisibleDays,
   calculateScrollPosition,
   shouldExpandLeft,
@@ -40,7 +41,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
     (state) => state.expandDateRangeRight
   );
 
-  // Initialize with 21-day range starting from today
+  // Initialize with proper buffer range centered around today
   useEffect(() => {
     // Guard against multiple initializations
     if (isInitializedRef.current) {
@@ -49,8 +50,11 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
 
     isInitializedRef.current = true;
     const today = new Date();
-    const startDate = startOfDay(today);
-    const endDate = addDays(startDate, SCROLL_CONFIG.TOTAL_RENDERED - 1);
+    const { startDate, endDate } = calculateRenderedRange(
+      today,
+      SCROLL_CONFIG.TOTAL_RENDERED
+    );
+
 
     setRenderedDateRange(startDate, endDate);
     setAnchorDate(today);
@@ -89,8 +93,13 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
       // Only proceed if scrollWidth is calculated and we haven't scrolled yet
       if (scrollWidth > clientWidth && scrollLeft === 0) {
         const today = new Date();
-        const dayOffset = differenceInDays(today, renderedDateRange.startDate);
-        const scrollPosition = dayOffset * SCROLL_CONFIG.DAY_WIDTH;
+        const scrollPosition = calculateScrollPosition(
+          today,
+          renderedDateRange.startDate,
+          SCROLL_CONFIG.VISIBLE_DAYS,
+          SCROLL_CONFIG.DAY_WIDTH
+        );
+
 
         // Set flag to prevent expansion during initial scroll
         isInitialScrollingRef.current = true;
@@ -101,6 +110,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         });
 
         const actualScrollLeft = scrollRef.current.scrollLeft;
+
 
         // If browser accepted the scroll, mark as applied
         if (actualScrollLeft > 0) {
@@ -184,6 +194,8 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
       currentScrollLeft,
       SCROLL_CONFIG.SCROLL_THRESHOLD
     ) && Date.now() - lastExpansionTimeRef.current > 500;
+
+
     if (shouldExpandL) {
       console.log(
         "[EXPAND LEFT] Triggered - adding",
@@ -192,20 +204,14 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
       );
       isExpandingRef.current = true;
       lastExpansionTimeRef.current = Date.now();
-      const previousScrollLeft = currentScrollLeft;
 
       // Expand the date range
       expandDateRangeLeft(SCROLL_CONFIG.DAYS_TO_ADD);
 
-      // Compensate scroll position after React renders new days
+      // No scroll compensation for left expansion - scroll position remains unchanged
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (scrollRef.current) {
-            const currentDayOffset = Math.floor(previousScrollLeft / SCROLL_CONFIG.DAY_WIDTH);
-            const newScrollLeft = (currentDayOffset + SCROLL_CONFIG.DAYS_TO_ADD) * SCROLL_CONFIG.DAY_WIDTH;
-            scrollRef.current.scrollLeft = newScrollLeft;
-            isExpandingRef.current = false;
-          }
+          isExpandingRef.current = false;
         });
       });
     }
@@ -225,6 +231,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
           "days"
         );
         isExpandingRef.current = true;
+        lastExpansionTimeRef.current = Date.now();
         const previousScrollLeft = currentScrollLeft;
 
         // Expand the date range
