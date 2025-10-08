@@ -3,7 +3,6 @@ import { useAppStore } from "@/lib/store";
 import type { TimeBlock, Event, Task } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { useInfiniteScroll } from "./useInfiniteScroll";
-import { groupOverlappingBlocks } from "@/lib/calendar-utils";
 
 export function useCalendar() {
   const events = useAppStore((state) => state.events.events);
