@@ -23,10 +23,7 @@ export function useCalendar() {
   const prevSelectedDateRef = useRef(selectedDate);
   const prevViewModeRef = useRef(viewMode);
 
-  const eventsChanged = prevEventsRef.current !== events;
-  const tasksChanged = prevTasksRef.current !== tasks;
   const selectedDateChanged = prevSelectedDateRef.current !== selectedDate;
-  const viewModeChanged = prevViewModeRef.current !== viewMode;
 
   prevEventsRef.current = events;
   prevTasksRef.current = tasks;
@@ -36,11 +33,6 @@ export function useCalendar() {
   // Auto-scroll to selected date when it changes
   useEffect(() => {
     if (selectedDateChanged) {
-      console.log("[CALENDAR DEBUG] selectedDate changed:", {
-        from: prevSelectedDateRef.current,
-        to: selectedDate,
-        viewMode,
-      });
       scrollToDate(selectedDate);
     }
   }, [selectedDate, selectedDateChanged, scrollToDate, viewMode]);
