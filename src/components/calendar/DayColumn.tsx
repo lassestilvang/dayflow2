@@ -90,21 +90,39 @@ export const DayColumn = React.memo(function DayColumn({
   const hourSlots = useMemo(() => getHourSlots(), []);
   const openEventModal = useAppStore((state) => state.openEventModal);
 
+  // Memoize day-specific blocks to avoid recalculating on every render
+  const dayBlocksData = useMemo(
+    () => getBlocksForDay(timeBlocks, date),
+    [timeBlocks, date]
+  );
+
+  // Memoize overlapping groups calculation
+  const overlappingGroups = useMemo(
+    () => groupOverlappingBlocks(dayBlocksData),
+    [dayBlocksData]
+  );
+
+  // Memoize position calculations for each block
+  const blockPositions = useMemo(() => {
+    const positions = new Map<string, { top: number; height: number }>();
+    dayBlocksData.forEach((block) => {
+      positions.set(block.id, calculateEventPosition(block.data));
+    });
+    return positions;
+  }, [dayBlocksData]);
+
   // Get blocks for this specific day and calculate positions
   const dayBlocks = useMemo(() => {
-    const blocks = getBlocksForDay(timeBlocks, date);
-    const groups = groupOverlappingBlocks(blocks);
-
-    return blocks.map((block) => {
-      const position = calculateEventPosition(block.data);
+    return dayBlocksData.map((block) => {
+      const position = blockPositions.get(block.id)!;
 
       // Find which group this block belongs to
-      const groupIndex = groups.findIndex((group) =>
+      const groupIndex = overlappingGroups.findIndex((group) =>
         group.some((b) => b.id === block.id)
       );
 
       if (groupIndex !== -1) {
-        const group = groups[groupIndex];
+        const group = overlappingGroups[groupIndex];
         if (!group) {
           return {
             block,
@@ -134,7 +152,7 @@ export const DayColumn = React.memo(function DayColumn({
         width: 100,
       };
     });
-  }, [date, timeBlocks]);
+  }, [dayBlocksData, overlappingGroups, blockPositions]);
 
   // Check if a time slot has any blocks
   const hasBlocksInSlot = (hour: number): boolean => {

@@ -26,16 +26,19 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
 
   // Get scroll state and actions from store
   const { renderedDateRange, currentWeekStart } = useAppStore(
-    (state) => state.scroll
+    (state) => state.scroll || {
+      renderedDateRange: { startDate: new Date(), endDate: new Date() },
+      currentWeekStart: new Date()
+    }
   );
   const setRenderedDateRange = useAppStore(
-    (state) => state.setRenderedDateRange
+    (state) => state.setRenderedDateRange || (() => {})
   );
-  const setAnchorDate = useAppStore((state) => state.setAnchorDate);
-  const setCurrentWeekStart = useAppStore((state) => state.setCurrentWeekStart);
-  const expandDateRangeLeft = useAppStore((state) => state.expandDateRangeLeft);
+  const setAnchorDate = useAppStore((state) => state.setAnchorDate || (() => {}));
+  const setCurrentWeekStart = useAppStore((state) => state.setCurrentWeekStart || (() => {}));
+  const expandDateRangeLeft = useAppStore((state) => state.expandDateRangeLeft || (() => {}));
   const expandDateRangeRight = useAppStore(
-    (state) => state.expandDateRangeRight
+    (state) => state.expandDateRangeRight || (() => {})
   );
 
   // Initialize with proper buffer range centered around today
@@ -138,7 +141,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         requestAnimationFrame(checkAndScroll);
       });
     });
-  }, [renderedDays.length, renderedDateRange.startDate]); // Run when days are rendered
+  }, [renderedDays.length, renderedDateRange.startDate, scrollRef]); // Run when days are rendered
 
   // Calculate visible days based on scroll position
   const visibleDays = calculateVisibleDays(
@@ -253,7 +256,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         });
       }
     }
-  }, [expandDateRangeLeft, expandDateRangeRight]);
+  }, [expandDateRangeLeft, expandDateRangeRight, scrollRef]);
 
   // Set up scroll event listener with throttling
   useEffect(() => {
@@ -290,7 +293,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [handleScroll]);
+  }, [handleScroll, scrollRef]);
 
   // Function to scroll to a specific date
   const scrollToDate = useCallback(
@@ -309,7 +312,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         behavior: "smooth",
       });
     },
-    [renderedDateRange.startDate]
+    [renderedDateRange.startDate, scrollRef]
   );
 
   return {

@@ -107,36 +107,45 @@ export function doBlocksOverlap(block1: TimeBlock, block2: TimeBlock): boolean {
 }
 
 /**
- * Group overlapping events for proper positioning
+ * Group overlapping events for proper positioning - Optimized O(n log n) version
+ * Uses sweep line algorithm to efficiently group overlapping intervals
  */
 export function groupOverlappingBlocks(blocks: TimeBlock[]): TimeBlock[][] {
   if (blocks.length === 0) return [];
 
+  // Sort blocks by start time - O(n log n)
   const sorted = [...blocks].sort(
     (a, b) => a.startTime.getTime() - b.startTime.getTime()
   );
 
-  const firstBlock = sorted[0];
-  if (!firstBlock) return [];
-
   const groups: TimeBlock[][] = [];
-  let currentGroup: TimeBlock[] = [firstBlock];
+  let currentGroup: TimeBlock[] = [];
+  let maxEndTime = new Date(0);
 
-  for (let i = 1; i < sorted.length; i++) {
-    const block = sorted[i];
-    if (!block) continue;
-
-    const overlaps = currentGroup.some((b) => doBlocksOverlap(b, block));
-
-    if (overlaps) {
-      currentGroup.push(block);
-    } else {
-      groups.push(currentGroup);
+  // Single pass through sorted blocks - O(n)
+  for (const block of sorted) {
+    // If this block doesn't overlap with the current group, start a new group
+    if (block.startTime >= maxEndTime) {
+      if (currentGroup.length > 0) {
+        groups.push(currentGroup);
+      }
       currentGroup = [block];
+      maxEndTime = block.endTime;
+    } else {
+      // Block overlaps with current group, add it
+      currentGroup.push(block);
+      // Update max end time if this block extends further
+      if (block.endTime > maxEndTime) {
+        maxEndTime = block.endTime;
+      }
     }
   }
 
-  groups.push(currentGroup);
+  // Add the last group
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
   return groups;
 }
 
