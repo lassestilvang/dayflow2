@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import type { TimeBlock, Event, Task } from "@/types";
 import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
@@ -32,6 +32,18 @@ export function useCalendar() {
   prevTasksRef.current = tasks;
   prevSelectedDateRef.current = selectedDate;
   prevViewModeRef.current = viewMode;
+
+  // Auto-scroll to selected date when it changes
+  useEffect(() => {
+    if (selectedDateChanged) {
+      console.log("[CALENDAR DEBUG] selectedDate changed:", {
+        from: prevSelectedDateRef.current,
+        to: selectedDate,
+        viewMode,
+      });
+      scrollToDate(selectedDate);
+    }
+  }, [selectedDate, selectedDateChanged, scrollToDate, viewMode]);
 
   // Memoize time block creation functions to avoid recreating them
   const createEventBlock = (event: Event): TimeBlock => ({
