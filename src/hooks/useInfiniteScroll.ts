@@ -223,13 +223,18 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
           "days"
         );
         isExpandingRef.current = true;
-        // Expand the date range (no compensation needed for right expansion)
+        const previousScrollLeft = currentScrollLeft;
+
+        // Expand the date range
         expandDateRangeRight(SCROLL_CONFIG.DAYS_TO_ADD);
 
-        // Reset expanding flag after a short delay
+        // Restore scroll position after React renders new days
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            isExpandingRef.current = false;
+            if (scrollRef.current) {
+              scrollRef.current.scrollLeft = previousScrollLeft;
+              isExpandingRef.current = false;
+            }
           });
         });
       }
