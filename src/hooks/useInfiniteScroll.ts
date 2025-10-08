@@ -191,6 +191,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         "days"
       );
       isExpandingRef.current = true;
+      lastExpansionTimeRef.current = Date.now();
       const previousScrollLeft = currentScrollLeft;
 
       // Expand the date range
@@ -215,7 +216,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
         totalWidth,
         containerWidth,
         SCROLL_CONFIG.SCROLL_THRESHOLD
-      );
+      ) && Date.now() - lastExpansionTimeRef.current > 500;
 
       if (shouldExpandR) {
         console.log(
