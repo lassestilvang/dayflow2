@@ -22,6 +22,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
   const isInitializedRef = useRef(false);
   const isInitialScrollingRef = useRef(false);
   const initialScrollAppliedRef = useRef(false);
+  const lastExpansionTimeRef = useRef(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -182,7 +183,7 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
     const shouldExpandL = shouldExpandLeft(
       currentScrollLeft,
       SCROLL_CONFIG.SCROLL_THRESHOLD
-    );
+    ) && Date.now() - lastExpansionTimeRef.current > 500;
     if (shouldExpandL) {
       console.log(
         "[EXPAND LEFT] Triggered - adding",
