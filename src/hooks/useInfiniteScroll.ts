@@ -297,5 +297,6 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
     renderedDays,
     visibleDays,
     scrollToDate,
+    isScrolling,
   };
 }
