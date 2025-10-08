@@ -994,17 +994,17 @@ export const useAppStore = create<AppState>()(
           dragOverSlot: null,
         },
         setDragging: (isDragging) =>
-          set((state) => ({
-            drag: { ...state.drag, isDragging },
-          })),
+           set((state) => ({
+             drag: { ...state.drag, isDragging },
+           })),
         setDraggedItem: (item) =>
-          set((state) => ({
-            drag: { ...state.drag, draggedItem: item },
-          })),
+           set((state) => ({
+             drag: { ...state.drag, draggedItem: item },
+           })),
         setDragOverSlot: (slot) =>
-          set((state) => ({
-            drag: { ...state.drag, dragOverSlot: slot },
-          })),
+           set((state) => ({
+             drag: { ...state.drag, dragOverSlot: slot },
+           })),
 
         // Conflict Detection
         checkConflicts: (startTime, endTime, excludeId) => {

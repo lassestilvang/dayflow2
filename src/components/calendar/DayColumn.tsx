@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { format, isToday } from "date-fns";
-import { motion } from "framer-motion";
 import type { TimeBlock as TimeBlockType } from "@/types";
 import { TimeBlock } from "./TimeBlock";
 import { cn } from "@/lib/utils";
@@ -22,7 +21,7 @@ interface DayColumnProps {
 }
 
 // Individual time slot component with droppable functionality
-function TimeSlot({
+const TimeSlot = React.memo(function TimeSlot({
   day,
   hour,
   hasBlocks,
@@ -62,15 +61,11 @@ function TimeSlot({
     >
       {/* Drop zone indicator when dragging over */}
       {isOver && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 pointer-events-none flex items-center justify-center"
-        >
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="bg-primary/20 border-2 border-dashed border-primary rounded-lg w-[90%] h-[90%] flex items-center justify-center">
             <span className="text-xs font-medium text-primary">Drop here</span>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Conflict indicator */}
@@ -79,7 +74,7 @@ function TimeSlot({
       )}
     </div>
   );
-}
+});
 
 export const DayColumn = React.memo(function DayColumn({
   date,
@@ -154,14 +149,19 @@ export const DayColumn = React.memo(function DayColumn({
     });
   }, [dayBlocksData, overlappingGroups, blockPositions]);
 
-  // Check if a time slot has any blocks
-  const hasBlocksInSlot = (hour: number): boolean => {
-    return dayBlocks.some(({ block }) => {
-      const startHour = block.startTime.getHours();
-      const endHour = block.endTime.getHours();
-      return hour >= startHour && hour < endHour;
-    });
-  };
+  // Check if a time slot has any blocks - memoized for performance
+  const hasBlocksInSlot = useMemo(() => {
+    const blockHourRanges = dayBlocks.map(({ block }) => ({
+      start: block.startTime.getHours(),
+      end: block.endTime.getHours(),
+    }));
+
+    return (hour: number): boolean => {
+      return blockHourRanges.some(
+        (range) => hour >= range.start && hour < range.end
+      );
+    };
+  }, [dayBlocks]);
 
   const handleTimeSlotClick = (hour: number) => {
     const clickedTime = createTimeOnDay(date, hour);

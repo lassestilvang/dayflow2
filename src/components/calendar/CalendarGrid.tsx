@@ -62,7 +62,7 @@ export function CalendarGrid({
     todayIndex >= 0 ? 80 + todayIndex * SCROLL_CONFIG.DAY_WIDTH : 0;
 
   return (
-    <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden relative" data-testid="calendar-grid">
       {/* Horizontal scroll container */}
       <div
         ref={scrollRef}
