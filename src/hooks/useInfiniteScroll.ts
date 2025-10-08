@@ -22,6 +22,9 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
   const isInitializedRef = useRef(false);
   const isInitialScrollingRef = useRef(false);
   const initialScrollAppliedRef = useRef(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initialScrollAppliedRef = useRef(false);
 
   // Get scroll state and actions from store
   const { renderedDateRange, currentWeekStart } = useAppStore(
