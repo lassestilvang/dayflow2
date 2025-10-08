@@ -6,7 +6,7 @@ export const SCROLL_CONFIG = {
   BUFFER_DAYS: 56, // Changed from 28 to 56 (8 weeks on each side)
   TOTAL_RENDERED: 119, // Changed from 63 to 119 (56 + 7 + 56)
   DAY_WIDTH: 200,
-  SCROLL_THRESHOLD: 0.3, // Keep at 30%
+  SCROLL_THRESHOLD: 0.5, // Changed to 50% to prevent multiple triggers
   SCROLL_THROTTLE_MS: 16,
   DAYS_TO_ADD: 7,
 } as const;

@@ -199,9 +199,9 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (scrollRef.current) {
-            const compensation =
-              SCROLL_CONFIG.DAYS_TO_ADD * SCROLL_CONFIG.DAY_WIDTH;
-            scrollRef.current.scrollLeft = previousScrollLeft + compensation;
+            const currentDayOffset = Math.floor(previousScrollLeft / SCROLL_CONFIG.DAY_WIDTH);
+            const newScrollLeft = (currentDayOffset + SCROLL_CONFIG.DAYS_TO_ADD) * SCROLL_CONFIG.DAY_WIDTH;
+            scrollRef.current.scrollLeft = newScrollLeft;
             isExpandingRef.current = false;
           }
         });
