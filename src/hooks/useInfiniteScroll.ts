@@ -3,9 +3,6 @@ import { useAppStore } from "@/lib/store";
 import {
   eachDayOfInterval,
   startOfWeek,
-  addDays,
-  startOfDay,
-  differenceInDays,
 } from "date-fns";
 import {
   SCROLL_CONFIG,
@@ -65,6 +62,14 @@ export function useInfiniteScroll(scrollRef: React.RefObject<HTMLDivElement>) {
     start: renderedDateRange.startDate,
     end: renderedDateRange.endDate,
   });
+
+  // Log rendered days and date range whenever it changes
+  useEffect(() => {
+    const daysCount = renderedDays.length;
+    const startStr = renderedDateRange.startDate.toISOString().slice(0, 10);
+    const endStr = renderedDateRange.endDate.toISOString().slice(0, 10);
+    console.log(`[InfiniteScroll] Rendered days: ${daysCount} (from ${startStr} to ${endStr})`);
+  }, [renderedDateRange, renderedDays.length]);
 
   // Apply initial scroll position after DOM is ready
   useEffect(() => {
