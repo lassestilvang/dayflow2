@@ -99,7 +99,7 @@ export function useCalendar() {
   return {
     selectedDate,
     viewMode,
-    timeBlocks: groupedTimeBlocks,
+    timeBlocks,
     setSelectedDate,
     setViewMode,
     getWeekDays: useMemo(() => {
