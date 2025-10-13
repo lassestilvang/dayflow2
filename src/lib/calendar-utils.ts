@@ -12,6 +12,7 @@ import {
   areIntervalsOverlapping,
 } from "date-fns";
 import type { Event, Task, TimeBlock } from "@/types";
+import { positionCache } from "./position-cache";
 
 /**
  * Get all days in a week starting from Monday
@@ -63,37 +64,13 @@ export function getWeekRangeString(date: Date): string {
 /**
  * Calculate position and height for an event in the calendar grid
  * Grid starts at 6 AM and each hour is 60px
+ * Uses intelligent caching for performance optimization
  */
 export function calculateEventPosition(event: Event | Task): {
   top: number;
   height: number;
 } {
-  const startTime =
-    "startTime" in event ? event.startTime : event.scheduledTime;
-  const endTime =
-    "endTime" in event
-      ? event.endTime
-      : event.scheduledTime
-      ? new Date(event.scheduledTime.getTime() + 60 * 60 * 1000)
-      : new Date();
-
-  if (!startTime || !endTime) {
-    return { top: 0, height: 60 };
-  }
-
-  const gridStartHour = 6; // 6 AM
-  const pixelsPerHour = 60;
-
-  const startHour = startTime.getHours() + startTime.getMinutes() / 60;
-  const endHour = endTime.getHours() + endTime.getMinutes() / 60;
-
-  const top = (startHour - gridStartHour) * pixelsPerHour;
-  const height = (endHour - startHour) * pixelsPerHour;
-
-  return {
-    top: Math.max(0, top),
-    height: Math.max(30, height), // Minimum height of 30px
-  };
+  return positionCache.getPosition(event);
 }
 
 /**
