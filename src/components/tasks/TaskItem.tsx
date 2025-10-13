@@ -13,7 +13,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { format } from "date-fns";
 import type { Task } from "@/types";
 import { useAppStore } from "@/lib/store";

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
 import { Trash2, Loader2, AlertCircle, Save } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
@@ -441,11 +440,7 @@ export function TaskModal({
 
               {/* Form Errors */}
               {Object.keys(form.formState.errors).length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-md bg-destructive/10 p-3 flex items-start gap-2"
-                >
+                <div className="rounded-md bg-destructive/10 p-3 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-destructive">
@@ -461,7 +456,7 @@ export function TaskModal({
                       )}
                     </ul>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               <DialogFooter className="gap-2">

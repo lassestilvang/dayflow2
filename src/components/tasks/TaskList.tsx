@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import type { Task } from "@/types";
 import { TaskItem } from "./TaskItem";
 import { groupTasksByDate } from "@/lib/task-utils";

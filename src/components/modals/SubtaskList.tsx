@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { X, Plus, GripVertical, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,19 +115,14 @@ export function SubtaskList({
       )}
 
       {/* Subtask List */}
-      <AnimatePresence mode="popLayout">
-        {subtasks.map((subtask, index) => (
-          <motion.div
-            key={subtask.id || index}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className={cn(
-              "flex items-start gap-2 p-2 rounded-md border bg-background",
-              disabled && "opacity-50"
-            )}
-          >
+      {subtasks.map((subtask, index) => (
+        <div
+          key={subtask.id || index}
+          className={cn(
+            "flex items-start gap-2 p-2 rounded-md border bg-background",
+            disabled && "opacity-50"
+          )}
+        >
             {/* Drag Handle */}
             <button
               type="button"
@@ -179,9 +173,8 @@ export function SubtaskList({
               <X className="h-4 w-4" />
               <span className="sr-only">Remove subtask</span>
             </Button>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+        </div>
+      ))}
 
       {/* Add New Subtask */}
       <div className="space-y-2">
@@ -216,13 +209,9 @@ export function SubtaskList({
 
         {/* Error Message */}
         {error && (
-          <motion.p
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm text-destructive"
-          >
+          <p className="text-sm text-destructive">
             {error}
-          </motion.p>
+          </p>
         )}
 
         {/* Character Count */}

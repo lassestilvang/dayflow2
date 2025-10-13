@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, RefObject } from "react";
 import { format, isToday } from "date-fns";
-import { motion } from "framer-motion";
+
 import type { TimeBlock as TimeBlockType } from "@/types";
 import { DayColumn } from "./DayColumn";
 import { cn } from "@/lib/utils";

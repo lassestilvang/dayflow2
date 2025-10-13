@@ -21,7 +21,7 @@ import { WeekView } from "@/components/calendar/WeekView";
 import { cn } from "@/lib/utils";
 import { TaskItem } from "@/components/tasks/TaskItem";
 import { TimeBlock } from "@/components/calendar/TimeBlock";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { formatConflictMessage } from "@/lib/conflict-detection";
 import { toast } from "sonner";
 import { ModalManager } from "@/components/modals/ModalManager";

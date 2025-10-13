@@ -43,7 +43,6 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.33.0",
-    "framer-motion": "^11.5.4",
     "lucide-react": "^0.439.0",
     "next": "^15.0.0",
     "next-auth": "^5.0.0-beta.22",

@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { useAppStore } from "@/lib/store";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskList } from "./TaskList";

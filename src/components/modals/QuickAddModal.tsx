@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -203,14 +202,8 @@ export function QuickAddModal({
           </div>
 
           {/* Parsed Preview */}
-          <AnimatePresence mode="wait">
-            {parsed && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-3"
-              >
+          {parsed && (
+            <div className="space-y-3">
                 {/* Detection Result */}
                 <div
                   className={cn(

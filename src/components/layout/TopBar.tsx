@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Menu, Bell, Plus, Search, Calendar } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -133,20 +133,13 @@ export function TopBar() {
               )}
             </button>
 
-            <AnimatePresence>
-              {notificationsOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setNotificationsOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-80 rounded-lg border bg-popover shadow-lg z-50"
-                  >
+            {notificationsOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setNotificationsOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-80 rounded-lg border bg-popover shadow-lg z-50">
                     <div className="p-3 border-b">
                       <h3 className="font-semibold">Notifications</h3>
                       {unreadCount > 0 && (

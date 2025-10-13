@@ -9,7 +9,7 @@ import {
   Tag,
   Flag,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import type { Task, CategoryType } from "@/types";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
