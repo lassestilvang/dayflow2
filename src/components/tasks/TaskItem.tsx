@@ -80,9 +80,8 @@ export function TaskItem({ task }: TaskItemProps) {
   const subtaskProgress = calculateSubtaskProgress(task.subtasks);
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
-      layout
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
@@ -144,31 +143,24 @@ export function TaskItem({ task }: TaskItemProps) {
               </h3>
 
               {/* Action Buttons (visible on hover) */}
-              <AnimatePresence>
-                {isHovered && !task.isCompleted && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="flex items-center gap-1"
+              {isHovered && !task.isCompleted && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleEdit}
+                    className="p-1 rounded hover:bg-accent transition-colors"
+                    aria-label="Edit task"
                   >
-                    <button
-                      onClick={handleEdit}
-                      className="p-1 rounded hover:bg-accent transition-colors"
-                      aria-label="Edit task"
-                    >
-                      <Edit className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      className="p-1 rounded hover:bg-accent transition-colors"
-                      aria-label="Delete task"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="p-1 rounded hover:bg-accent transition-colors"
+                    aria-label="Delete task"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Description (when collapsed) */}
@@ -269,86 +261,76 @@ export function TaskItem({ task }: TaskItemProps) {
       </div>
 
       {/* Expanded Content */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-3 border-t pt-3">
-              {/* Full Description */}
-              {task.description && (
-                <div className="text-sm text-muted-foreground">
-                  {task.description}
-                </div>
-              )}
-
-              {/* Subtasks */}
-              {task.subtasks.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold text-foreground">
-                    Subtasks (
-                    {task.subtasks.filter((st) => st.completed).length}/
-                    {task.subtasks.length})
-                  </div>
-                  <div className="space-y-1">
-                    {task.subtasks
-                      .sort((a, b) => a.order - b.order)
-                      .map((subtask) => (
-                        <motion.div
-                          key={subtask.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center gap-2 group"
-                        >
-                          <button
-                            onClick={() =>
-                              handleToggleSubtask(subtask.id, subtask.completed)
-                            }
-                            className="flex-shrink-0 rounded hover:bg-accent transition-colors"
-                            aria-label={
-                              subtask.completed
-                                ? "Mark subtask incomplete"
-                                : "Mark subtask complete"
-                            }
-                          >
-                            {subtask.completed ? (
-                              <Check className="h-4 w-4 text-primary" />
-                            ) : (
-                              <Circle className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                          <span
-                            className={cn(
-                              "text-sm flex-1",
-                              subtask.completed &&
-                                "line-through text-muted-foreground"
-                            )}
-                          >
-                            {subtask.title}
-                          </span>
-                        </motion.div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Task Metadata */}
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div>Created: {format(task.createdAt, "MMM d, yyyy")}</div>
-                {task.updatedAt.getTime() !== task.createdAt.getTime() && (
-                  <div>
-                    Updated: {format(task.updatedAt, "MMM d, yyyy HH:mm")}
-                  </div>
-                )}
+      {isExpanded && (
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3 space-y-3 border-t pt-3">
+            {/* Full Description */}
+            {task.description && (
+              <div className="text-sm text-muted-foreground">
+                {task.description}
               </div>
+            )}
+
+            {/* Subtasks */}
+            {task.subtasks.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-foreground">
+                  Subtasks (
+                  {task.subtasks.filter((st) => st.completed).length}/
+                  {task.subtasks.length})
+                </div>
+                <div className="space-y-1">
+                  {task.subtasks
+                    .sort((a, b) => a.order - b.order)
+                    .map((subtask) => (
+                      <div
+                        key={subtask.id}
+                        className="flex items-center gap-2 group"
+                      >
+                        <button
+                          onClick={() =>
+                            handleToggleSubtask(subtask.id, subtask.completed)
+                          }
+                          className="flex-shrink-0 rounded hover:bg-accent transition-colors"
+                          aria-label={
+                            subtask.completed
+                              ? "Mark subtask incomplete"
+                              : "Mark subtask complete"
+                          }
+                        >
+                          {subtask.completed ? (
+                            <Check className="h-4 w-4 text-primary" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </button>
+                        <span
+                          className={cn(
+                            "text-sm flex-1",
+                            subtask.completed &&
+                              "line-through text-muted-foreground"
+                          )}
+                        >
+                          {subtask.title}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Task Metadata */}
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div>Created: {format(task.createdAt, "MMM d, yyyy")}</div>
+              {task.updatedAt.getTime() !== task.createdAt.getTime() && (
+                <div>
+                  Updated: {format(task.updatedAt, "MMM d, yyyy HH:mm")}
+                </div>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

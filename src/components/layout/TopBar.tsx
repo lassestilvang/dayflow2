@@ -178,10 +178,9 @@ export function TopBar() {
                         View all notifications
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 </>
               )}
-            </AnimatePresence>
           </div>
 
           {/* User Menu */}
@@ -202,20 +201,13 @@ export function TopBar() {
               </span>
             </button>
 
-            <AnimatePresence>
-              {userMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setUserMenuOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-56 rounded-lg border bg-popover shadow-lg z-50"
-                  >
+            {userMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setUserMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border bg-popover shadow-lg z-50">
                     <div className="p-3 border-b">
                       <p className="font-medium">Demo User</p>
                       <p className="text-xs text-muted-foreground">
@@ -238,10 +230,9 @@ export function TopBar() {
                         Sign out
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 </>
               )}
-            </AnimatePresence>
           </div>
 
           {/* Task Sidebar Toggle (mobile) */}
@@ -256,30 +247,23 @@ export function TopBar() {
       </div>
 
       {/* Mobile Search Bar */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden border-t overflow-hidden"
-          >
-            <div className="p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search tasks and events..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                  autoFocus
-                />
-              </div>
+      {searchOpen && (
+        <div className="md:hidden border-t overflow-hidden">
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search tasks and events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                autoFocus
+              />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

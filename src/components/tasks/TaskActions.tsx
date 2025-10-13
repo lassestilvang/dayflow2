@@ -86,27 +86,20 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
         <MoreVertical className="h-4 w-4 text-muted-foreground" />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => {
-                setIsOpen(false);
-                setShowCategoryMenu(false);
-                setShowPriorityMenu(false);
-              }}
-            />
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => {
+              setIsOpen(false);
+              setShowCategoryMenu(false);
+              setShowPriorityMenu(false);
+            }}
+          />
 
-            {/* Menu */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-popover shadow-lg z-50"
-            >
+          {/* Menu */}
+          <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-popover shadow-lg z-50">
               <div className="p-1">
                 {/* Edit */}
                 <button
@@ -147,15 +140,8 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
                     </span>
                   </button>
 
-                  <AnimatePresence>
-                    {showCategoryMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute left-full top-0 ml-1 w-40 rounded-md border bg-popover shadow-lg z-50"
-                      >
+                  {showCategoryMenu && (
+                    <div className="absolute left-full top-0 ml-1 w-40 rounded-md border bg-popover shadow-lg z-50">
                         <div className="p-1">
                           {categories.map((category) => (
                             <button
@@ -176,9 +162,8 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
                             </button>
                           ))}
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
 
                 {/* Change Priority */}
@@ -194,15 +179,8 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
                     </span>
                   </button>
 
-                  <AnimatePresence>
-                    {showPriorityMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute left-full top-0 ml-1 w-32 rounded-md border bg-popover shadow-lg z-50"
-                      >
+                  {showPriorityMenu && (
+                    <div className="absolute left-full top-0 ml-1 w-32 rounded-md border bg-popover shadow-lg z-50">
                         <div className="p-1">
                           {priorities.map((priority) => (
                             <button
@@ -225,9 +203,8 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
                             </button>
                           ))}
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
 
                 <div className="my-1 border-t" />

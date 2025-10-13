@@ -116,9 +116,7 @@ export function CalendarGrid({
 
             {/* Current time indicator */}
             {showCurrentTimeIndicator && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+              <div
                 className="absolute z-10 pointer-events-none"
                 style={{
                   top: `${88 + currentTimePosition}px`,
@@ -135,7 +133,7 @@ export function CalendarGrid({
                     {format(new Date(), "h:mm a")}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
         </div>

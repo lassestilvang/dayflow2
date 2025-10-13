@@ -361,58 +361,50 @@ export default function DashboardPage() {
         </DragOverlay>
 
         {/* Conflict Modal */}
-        <AnimatePresence>
-          {showConflictModal && pendingDrop && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-              onClick={() => handleConflictResolve("cancel")}
+        {showConflictModal && pendingDrop && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => handleConflictResolve("cancel")}
+          >
+            <div
+              className="bg-background rounded-lg shadow-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                className="bg-background rounded-lg shadow-xl max-w-md w-full p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-xl font-semibold mb-4">
-                  Scheduling Conflict Detected
-                </h2>
-                <p className="text-muted-foreground mb-4">
-                  {formatConflictMessage(pendingDrop.conflict)}
-                </p>
-                {pendingDrop.conflict.suggestions.length > 0 && (
-                  <div className="bg-accent rounded-lg p-4 mb-4">
-                    <p className="text-sm font-medium mb-2">Suggestions:</p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      {pendingDrop.conflict.suggestions.map(
-                        (suggestion: string, i: number) => (
-                          <li key={i}>{suggestion}</li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleConflictResolve("cancel")}
-                    className="flex-1 px-4 py-2 rounded-lg border hover:bg-accent transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleConflictResolve("schedule")}
-                    className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    Schedule Anyway
-                  </button>
+              <h2 className="text-xl font-semibold mb-4">
+                Scheduling Conflict Detected
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                {formatConflictMessage(pendingDrop.conflict)}
+              </p>
+              {pendingDrop.conflict.suggestions.length > 0 && (
+                <div className="bg-accent rounded-lg p-4 mb-4">
+                  <p className="text-sm font-medium mb-2">Suggestions:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    {pendingDrop.conflict.suggestions.map(
+                      (suggestion: string, i: number) => (
+                        <li key={i}>{suggestion}</li>
+                      )
+                    )}
+                  </ul>
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleConflictResolve("cancel")}
+                  className="flex-1 px-4 py-2 rounded-lg border hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleConflictResolve("schedule")}
+                  className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Schedule Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Manager - handles all modals */}

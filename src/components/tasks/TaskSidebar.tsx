@@ -81,15 +81,8 @@ export function TaskSidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <AnimatePresence>
-        {taskSidebarOpen && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="hidden xl:flex h-full flex-col border-l bg-background overflow-hidden"
-          >
+      {taskSidebarOpen && (
+        <aside className="hidden xl:flex h-full flex-col border-l bg-background overflow-hidden">
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="border-b p-4">
@@ -227,41 +220,30 @@ export function TaskSidebar() {
                 <TaskList tasks={displayTasks} />
               </div>
             </div>
-          </motion.aside>
+          </aside>
         )}
-      </AnimatePresence>
 
       {/* Collapsed Sidebar Toggle */}
       {!taskSidebarOpen && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <button
           onClick={toggleTaskSidebar}
           className="hidden xl:flex fixed right-0 top-1/2 transform -translate-y-1/2 items-center justify-center w-6 h-16 bg-primary text-primary-foreground rounded-l-md hover:w-8 transition-all z-40"
           aria-label="Open task sidebar"
         >
           <ChevronLeft className="h-4 w-4" />
-        </motion.button>
+        </button>
       )}
 
       {/* Mobile Overlay */}
-      <AnimatePresence>
-        {taskSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="xl:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-            onClick={toggleTaskSidebar}
+      {taskSidebarOpen && (
+        <div
+          className="xl:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+          onClick={toggleTaskSidebar}
+        >
+          <div
+            className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-background border-l shadow-lg"
+            onClick={(e) => e.stopPropagation()}
           >
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-background border-l shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
               <div className="flex flex-col h-full">
                 {/* Mobile Header */}
                 <div className="border-b p-4">
@@ -401,10 +383,9 @@ export function TaskSidebar() {
                   <TaskList tasks={displayTasks} />
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   );
 }

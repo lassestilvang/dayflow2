@@ -71,14 +71,7 @@ export function TaskList({ tasks }: TaskListProps) {
             if (!groupTasks || groupTasks.length === 0) return null;
 
             return (
-              <motion.div
-                key={groupKey}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-2"
-              >
+              <div key={groupKey} className="space-y-2">
                 {/* Group Header */}
                 <div className="flex items-center justify-between">
                   <h3
@@ -96,24 +89,12 @@ export function TaskList({ tasks }: TaskListProps) {
                 </div>
 
                 {/* Tasks in Group */}
-                <AnimatePresence mode="popLayout">
-                  {groupTasks.map((task, index) => (
-                    <motion.div
-                      key={task.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20, height: 0 }}
-                      transition={{
-                        duration: 0.2,
-                        delay: index * 0.05,
-                      }}
-                      layout
-                    >
-                      <TaskItem task={task} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
+                {groupTasks.map((task, index) => (
+                  <div key={task.id}>
+                    <TaskItem task={task} />
+                  </div>
+                ))}
+              </div>
             );
           })}
         </>
@@ -125,12 +106,7 @@ export function TaskList({ tasks }: TaskListProps) {
 
       {/* Completed Tasks */}
       {groupedTasks.completed.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, delay: 0.1 }}
-          className="space-y-2"
-        >
+        <div className="space-y-2">
           {/* Completed Header */}
           <div className="flex items-center justify-between pt-4 border-t">
             <h3 className="text-sm font-semibold text-muted-foreground">
@@ -156,10 +132,10 @@ export function TaskList({ tasks }: TaskListProps) {
                 layout
               >
                 <TaskItem task={task} />
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
       )}
     </div>
   );

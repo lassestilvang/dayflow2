@@ -310,9 +310,8 @@ export function QuickAddModal({
                     )}
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
 
           {/* Examples */}
           {!input && (
