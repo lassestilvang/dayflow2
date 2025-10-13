@@ -330,9 +330,7 @@ export default function DashboardPage() {
         {/* Drag Overlay */}
         <DragOverlay dropAnimation={null}>
           {draggedItemData && (
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0.8 }}
-              animate={{ scale: 1, opacity: 0.9 }}
+            <div
               className="cursor-grabbing"
             >
               {draggedItemData.type === "task" ? (
@@ -358,7 +356,7 @@ export default function DashboardPage() {
                   />
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
         </DragOverlay>
 

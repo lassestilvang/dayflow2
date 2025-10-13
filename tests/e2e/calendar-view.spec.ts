@@ -204,7 +204,7 @@ test.describe("Current Time Indicator", () => {
         expect(styles.backgroundColor).toBeTruthy();
             }
     });
-        });
+  });
 
   test.describe("Calendar Navigation", () => {
           test("can navigate through weeks", async ({ page }) => {
@@ -294,7 +294,7 @@ test.describe("Current Time Indicator", () => {
         expect(height).toBeGreaterThan(400);
               }
     });
-          });
+  });
 
   test.describe("Scrolling Behavior", () => {
     test("calendar is scrollable", async ({ page }) => {
@@ -336,6 +336,7 @@ test.describe("Current Time Indicator", () => {
         expect(scrollTop2).toBeGreaterThan(scrollTop1);
       }
      });
+  });
 
   test.describe("Performance", () => {
     test("calendar renders quickly", async ({ page }) => {

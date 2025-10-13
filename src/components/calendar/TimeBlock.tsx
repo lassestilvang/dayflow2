@@ -1,7 +1,6 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { motion } from "framer-motion";
 import { Clock, Users, MapPin, GripVertical } from "lucide-react";
 import type { TimeBlock as TimeBlockType, Event } from "@/types";
 import { cn } from "@/lib/utils";
@@ -76,13 +75,8 @@ export function TimeBlock({
     : undefined;
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      whileHover={{ scale: isDragging ? 1 : 1.02, zIndex: 50 }}
-      transition={{ duration: 0.2 }}
       onClick={onClick}
       className={cn(
         "absolute rounded-lg border-l-4 shadow-sm cursor-pointer overflow-hidden",
@@ -166,6 +160,6 @@ export function TimeBlock({
 
       {/* Hover effect overlay */}
       <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
-    </motion.div>
+    </div>
   );
 }
