@@ -118,23 +118,11 @@ export function TaskList({ tasks }: TaskListProps) {
           </div>
 
           {/* Completed Tasks */}
-          <AnimatePresence mode="popLayout">
-            {groupedTasks.completed.map((task, index) => (
-              <motion.div
-                key={task.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20, height: 0 }}
-                transition={{
-                  duration: 0.2,
-                  delay: index * 0.05,
-                }}
-                layout
-              >
-                <TaskItem task={task} />
-              </div>
-            ))}
-          </AnimatePresence>
+          {groupedTasks.completed.map((task, index) => (
+            <div key={task.id}>
+              <TaskItem task={task} />
+            </div>
+          ))}
         </div>
       )}
     </div>
