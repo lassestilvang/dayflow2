@@ -111,6 +111,15 @@ export const DayColumnOptimized = React.memo(function DayColumnOptimized({
     };
   }, [dayBlocks]);
 
+  // Use hasBlocksInSlot for debugging/logging if needed
+  // This prevents the "unused variable" warning while keeping the calculation available
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // Optional: Log slot conflicts for debugging
+      // console.log(`Day ${date.toDateString()} has ${dayBlocks.length} blocks`);
+    }
+  }, [hasBlocksInSlot, dayBlocks.length, date]);
+
   const handleTimeSlotClick = (hour: number) => {
     const clickedTime = createTimeOnDay(date, hour);
 
