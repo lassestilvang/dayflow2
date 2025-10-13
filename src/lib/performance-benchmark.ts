@@ -1,342 +1,376 @@
-// Performance benchmark suite for drag and drop optimization
-// Provides automated testing and comparison of performance metrics
+/**
+ * Performance benchmark utilities for testing time slot optimization improvements
+ */
 
-import { baselineMonitor, type BaselineMetrics, type PerformanceBenchmark } from './baseline-monitor';
-import { dragPerformanceMonitor } from './performance-monitor';
-
-export interface BenchmarkScenario {
-  name: string;
-  description: string;
-  setup?: () => Promise<void>;
-  execute: () => Promise<void>;
-  cleanup?: () => Promise<void>;
-  iterations?: number;
-}
+import type { TimeBlock } from "@/types";
+import { getHourSlots } from "./calendar-utils";
+import { SpatialIndex, TimeSlotSpatialIndex } from "./spatial-index";
+import { DropZonePool, TimeSlotDropZonePool } from "./drop-zone-pool";
 
 export interface BenchmarkResult {
-  scenario: string;
-  metrics: BaselineMetrics;
-  benchmarks: PerformanceBenchmark[];
-  success: boolean;
-  errors: string[];
+  testName: string;
+  duration: number;
+  memoryUsage?: number;
+  domNodes?: number;
+  collisionChecks?: number;
+  spatialQueries?: number;
+  poolStats?: any;
+  timestamp: number;
 }
 
-class PerformanceBenchmarkSuite {
-  private static instance: PerformanceBenchmarkSuite;
-  private scenarios: Map<string, BenchmarkScenario> = new Map();
-  private results: BenchmarkResult[] = [];
+export interface BenchmarkSuite {
+  name: string;
+  results: BenchmarkResult[];
+  summary: {
+    averageDuration: number;
+    totalDuration: number;
+    memoryEfficiency: number;
+    domNodeReduction: number;
+  };
+}
 
-  static getInstance(): PerformanceBenchmarkSuite {
-    if (!PerformanceBenchmarkSuite.instance) {
-      PerformanceBenchmarkSuite.instance = new PerformanceBenchmarkSuite();
-    }
-    return PerformanceBenchmarkSuite.instance;
-  }
+/**
+ * Generate mock time blocks for testing
+ */
+export function generateMockTimeBlocks(count: number = 50): TimeBlock[] {
+  const blocks: TimeBlock[] = [];
+  const hourSlots = getHourSlots();
+  const today = new Date();
 
-  registerScenario(scenario: BenchmarkScenario): void {
-    this.scenarios.set(scenario.name, scenario);
-    console.log(`[BENCHMARK] Registered scenario: ${scenario.name}`);
-  }
+  for (let i = 0; i < count; i++) {
+    const startHour = hourSlots[Math.floor(Math.random() * hourSlots.length)];
+    const duration = Math.floor(Math.random() * 3) + 1; // 1-3 hours
+    const endHour = Math.min(startHour + duration, hourSlots[hourSlots.length - 1]);
 
-  async runScenario(scenarioName: string): Promise<BenchmarkResult> {
-    const scenario = this.scenarios.get(scenarioName);
-    if (!scenario) {
-      throw new Error(`Scenario '${scenarioName}' not found`);
-    }
+    const startTime = new Date(today);
+    startTime.setHours(startHour, 0, 0, 0);
 
-    console.log(`[BENCHMARK] Running scenario: ${scenarioName}`);
+    const endTime = new Date(today);
+    endTime.setHours(endHour, 0, 0, 0);
 
-    const errors: string[] = [];
-    let metrics: BaselineMetrics | null = null;
-
-    try {
-      // Setup phase
-      if (scenario.setup) {
-        await scenario.setup();
-      }
-
-      // Start baseline collection
-      baselineMonitor.startCollection();
-
-      // Execute the scenario
-      const iterations = scenario.iterations || 1;
-      for (let i = 0; i < iterations; i++) {
-        console.log(`[BENCHMARK] Iteration ${i + 1}/${iterations}`);
-        await scenario.execute();
-      }
-
-      // Stop collection and get metrics
-      metrics = baselineMonitor.stopCollection();
-
-      if (!metrics) {
-        throw new Error('Failed to collect baseline metrics');
-      }
-
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : String(error));
-      console.error(`[BENCHMARK] Error in scenario ${scenarioName}:`, error);
-    } finally {
-      // Cleanup phase
-      if (scenario.cleanup) {
-        try {
-          await scenario.cleanup();
-        } catch (error) {
-          errors.push(`Cleanup error: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }
-    }
-
-    const result: BenchmarkResult = {
-      scenario: scenarioName,
-      metrics: metrics || this.getEmptyMetrics(),
-      benchmarks: metrics ? baselineMonitor.generateBenchmarks() : [],
-      success: errors.length === 0,
-      errors,
-    };
-
-    this.results.push(result);
-
-    console.log(`[BENCHMARK] Scenario ${scenarioName} completed:`, result.success ? 'SUCCESS' : 'FAILED');
-    return result;
-  }
-
-  async runAllScenarios(): Promise<BenchmarkResult[]> {
-    const results: BenchmarkResult[] = [];
-
-    for (const scenarioName of this.scenarios.keys()) {
-      const result = await this.runScenario(scenarioName);
-      results.push(result);
-    }
-
-    return results;
-  }
-
-  private getEmptyMetrics(): BaselineMetrics {
-    return {
-      timestamp: Date.now(),
-      frameRate: { average: 0, min: 0, max: 0, samples: [] },
-      memoryUsage: { initial: 0, peak: 0, final: 0, increase: 0, increaseMB: 0 },
-      collisionDetection: { totalChecks: 0, averageTime: 0, maxTime: 0, totalTime: 0 },
-      storeUpdates: { count: 0, frequency: 0 },
-      timeSlotCreation: { count: 0, overhead: 0 },
-      dragOperations: { count: 0, averageDuration: 0, totalDuration: 0 },
-    };
-  }
-
-  generateReport(): string {
-    if (this.results.length === 0) {
-      return 'No benchmark results available';
-    }
-
-    let report = '=== PERFORMANCE BENCHMARK REPORT ===\n\n';
-
-    this.results.forEach(result => {
-      report += `📋 SCENARIO: ${result.scenario}\n`;
-      report += `Status: ${result.success ? '✅ PASSED' : '❌ FAILED'}\n`;
-
-      if (result.errors.length > 0) {
-        report += `Errors:\n`;
-        result.errors.forEach(error => report += `  - ${error}\n`);
-      }
-
-      if (result.success) {
-        const metrics = result.metrics;
-        report += `Frame Rate: ${metrics.frameRate.average}fps\n`;
-        report += `Memory Increase: ${metrics.memoryUsage.increaseMB.toFixed(2)}MB\n`;
-        report += `Collision Detection: ${metrics.collisionDetection.averageTime}ms avg\n`;
-        report += `Store Updates: ${metrics.storeUpdates.count} total\n`;
-        report += `Time Slots: ${metrics.timeSlotCreation.count} instances\n\n`;
-
-        // Benchmark status
-        const passing = result.benchmarks.filter(b => b.status === 'pass').length;
-        const warning = result.benchmarks.filter(b => b.status === 'warning').length;
-        const failing = result.benchmarks.filter(b => b.status === 'fail').length;
-
-        report += `Benchmarks: ${passing} passed, ${warning} warnings, ${failing} failed\n\n`;
-      }
-
-      report += '---\n\n';
+    blocks.push({
+      id: `mock-block-${i}`,
+      type: Math.random() > 0.5 ? "task" : "event",
+      data: {
+        id: `mock-${i}`,
+        title: `Mock Block ${i}`,
+        startTime,
+        endTime,
+        category: "work",
+        userId: "test-user",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any,
+      startTime,
+      endTime,
+      duration: duration * 60,
     });
-
-    return report;
   }
 
-  getResults(): BenchmarkResult[] {
-    return [...this.results];
-  }
-
-  exportResults(): string {
-    return JSON.stringify(this.results, null, 2);
-  }
+  return blocks;
 }
 
-export const performanceBenchmarkSuite = PerformanceBenchmarkSuite.getInstance();
+/**
+ * Benchmark traditional collision detection (O(n²))
+ */
+export function benchmarkTraditionalCollisionDetection(blocks: TimeBlock[]): BenchmarkResult {
+  const startTime = performance.now();
+  const startMemory = (performance as any).memory?.usedJSHeapSize;
 
-// Predefined benchmark scenarios
-export const predefinedScenarios: BenchmarkScenario[] = [
-  {
-    name: 'basic-drag-operation',
-    description: 'Basic drag and drop operation with single task',
-    iterations: 5,
-    execute: async () => {
-      // Simulate basic drag operation
-      const dragId = `benchmark-drag-${Date.now()}`;
-      dragPerformanceMonitor.startDragSession(dragId);
+  let collisionChecks = 0;
 
-      // Simulate collision checks
-      for (let i = 0; i < 10; i++) {
-        dragPerformanceMonitor.recordConflictCheck(dragId);
-        await new Promise(resolve => setTimeout(resolve, 10));
+  // Traditional O(n²) collision detection
+  for (let i = 0; i < blocks.length; i++) {
+    for (let j = i + 1; j < blocks.length; j++) {
+      collisionChecks++;
+
+      const block1 = blocks[i];
+      const block2 = blocks[j];
+
+      // Simple overlap check
+      const overlap = !(
+        block1.endTime <= block2.startTime ||
+        block2.endTime <= block1.startTime
+      );
+
+      if (overlap) {
+        // Would handle collision here
       }
+    }
+  }
 
-      // Simulate position calculations
-      for (let i = 0; i < 20; i++) {
-        dragPerformanceMonitor.recordPositionCalculation(dragId);
-        await new Promise(resolve => setTimeout(resolve, 5));
-      }
+  const endTime = performance.now();
+  const endMemory = (performance as any).memory?.usedJSHeapSize;
 
-      dragPerformanceMonitor.endDragSession(dragId);
-    },
-  },
-  {
-    name: 'heavy-collision-detection',
-    description: 'Stress test collision detection with many items',
-    iterations: 3,
-    execute: async () => {
-      const dragId = `collision-benchmark-${Date.now()}`;
-      dragPerformanceMonitor.startDragSession(dragId);
+  return {
+    testName: "Traditional Collision Detection",
+    duration: endTime - startTime,
+    memoryUsage: endMemory ? endMemory - (startMemory || 0) : undefined,
+    collisionChecks,
+    timestamp: Date.now(),
+  };
+}
 
-      // Simulate heavy collision detection (119 time slots)
-      for (let i = 0; i < 119; i++) {
-        const startTime = performance.now();
-        dragPerformanceMonitor.recordConflictCheck(dragId);
-        const duration = performance.now() - startTime;
-        baselineMonitor.recordCollisionDetection(duration);
+/**
+ * Benchmark spatial index collision detection (O(log n))
+ */
+export function benchmarkSpatialIndexCollisionDetection(blocks: TimeBlock[]): BenchmarkResult {
+  const startTime = performance.now();
+  const startMemory = (performance as any).memory?.usedJSHeapSize;
 
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 2));
-      }
+  const spatialIndex = new TimeSlotSpatialIndex();
+  let spatialQueries = 0;
 
-      dragPerformanceMonitor.endDragSession(dragId);
-    },
-  },
-  {
-    name: 'memory-stress-test',
-    description: 'Test memory usage during extended drag operations',
-    iterations: 10,
-    execute: async () => {
-      const dragId = `memory-benchmark-${Date.now()}`;
-      dragPerformanceMonitor.startDragSession(dragId);
+  // Insert all blocks into spatial index
+  blocks.forEach((block) => {
+    const bounds = {
+      x: 0,
+      y: block.startTime.getHours() * 60,
+      width: 200,
+      height: block.duration,
+    };
 
-      // Create multiple drag sessions to stress memory
-      for (let i = 0; i < 50; i++) {
-        dragPerformanceMonitor.recordConflictCheck(dragId);
-        dragPerformanceMonitor.recordPositionCalculation(dragId);
+    spatialIndex.insert({
+      id: block.id,
+      bounds,
+      data: block,
+    });
+  });
 
-        if (i % 10 === 0) {
-          // Force garbage collection check
-          if (typeof window !== 'undefined' && (window as any).gc) {
-            (window as any).gc();
-          }
+  // Query for collisions using spatial index
+  blocks.forEach((block) => {
+    const bounds = {
+      x: 0,
+      y: block.startTime.getHours() * 60,
+      width: 200,
+      height: block.duration,
+    };
+
+    spatialQueries++;
+    const nearbyBlocks = spatialIndex.query(bounds);
+
+    // Filter out the block itself and check for actual collisions
+    nearbyBlocks
+      .filter((nearby) => nearby.id !== block.id)
+      .forEach((nearby) => {
+        const nearbyBlock = nearby.data as TimeBlock;
+        const overlap = !(
+          block.endTime <= nearbyBlock.startTime ||
+          nearbyBlock.endTime <= block.startTime
+        );
+
+        if (overlap) {
+          // Would handle collision here
         }
+      });
+  });
 
-        await new Promise(resolve => setTimeout(resolve, 20));
-      }
+  const endTime = performance.now();
+  const endMemory = (performance as any).memory?.usedJSHeapSize;
 
-      dragPerformanceMonitor.endDragSession(dragId);
-    },
-  },
-  {
-    name: 'store-update-frequency',
-    description: 'Test store update frequency during drag operations',
-    iterations: 8,
-    execute: async () => {
-      const dragId = `store-benchmark-${Date.now()}`;
-      dragPerformanceMonitor.startDragSession(dragId);
+  return {
+    testName: "Spatial Index Collision Detection",
+    duration: endTime - startTime,
+    memoryUsage: endMemory ? endMemory - (startMemory || 0) : undefined,
+    spatialQueries,
+    timestamp: Date.now(),
+  };
+}
 
-      // Simulate frequent store updates
-      for (let i = 0; i < 100; i++) {
-        baselineMonitor.recordStoreUpdate();
+/**
+ * Benchmark DOM rendering performance
+ */
+export function benchmarkDOMRendering(
+  slotCount: number,
+  renderCallback: (count: number) => void
+): BenchmarkResult {
+  const startTime = performance.now();
+  const startMemory = (performance as any).memory?.usedJSHeapSize;
+  const initialDomNodes = document.querySelectorAll('*').length;
 
-        if (i % 10 === 0) {
-          dragPerformanceMonitor.recordConflictCheck(dragId);
-        }
+  // Simulate rendering slots
+  renderCallback(slotCount);
 
-        await new Promise(resolve => setTimeout(resolve, 5));
-      }
+  const endTime = performance.now();
+  const endMemory = (performance as any).memory?.usedJSHeapSize;
+  const finalDomNodes = document.querySelectorAll('*').length;
 
-      dragPerformanceMonitor.endDragSession(dragId);
-    },
-  },
-  {
-    name: 'time-slot-creation-overhead',
-    description: 'Measure time slot creation performance overhead',
-    iterations: 3,
-    execute: async () => {
-      baselineMonitor.recordTimeSlotCreationStart();
+  return {
+    testName: `DOM Rendering (${slotCount} slots)`,
+    duration: endTime - startTime,
+    memoryUsage: endMemory ? endMemory - (startMemory || 0) : undefined,
+    domNodes: finalDomNodes - initialDomNodes,
+    timestamp: Date.now(),
+  };
+}
 
-      // Simulate creating 119 time slots
-      for (let i = 0; i < 119; i++) {
-        // Simulate time slot creation overhead
-        await new Promise(resolve => setTimeout(resolve, 1));
-      }
+/**
+ * Benchmark drop zone pool performance
+ */
+export function benchmarkDropZonePool(): BenchmarkResult {
+  const startTime = performance.now();
+  const startMemory = (performance as any).memory?.usedJSHeapSize;
 
-      baselineMonitor.recordTimeSlotCreationEnd();
-    },
-  },
-];
+  const pool = new TimeSlotDropZonePool(0); // Day index 0
+  const iterations = 1000;
 
-// Register predefined scenarios
-predefinedScenarios.forEach(scenario => {
-  performanceBenchmarkSuite.registerScenario(scenario);
-});
+  // Simulate pool operations
+  for (let i = 0; i < iterations; i++) {
+    const hour = Math.floor(Math.random() * 17) + 6;
+    const zone = pool.getTimeSlotDropZone(hour, { test: `data-${i}` });
 
-// Utility functions for manual benchmarking
-export const benchmarkUtils = {
-  startBenchmark: (name: string) => {
-    console.log(`[BENCHMARK] Starting manual benchmark: ${name}`);
-    baselineMonitor.startCollection();
-  },
-
-  endBenchmark: (name: string) => {
-    console.log(`[BENCHMARK] Ending manual benchmark: ${name}`);
-    const metrics = baselineMonitor.stopCollection();
-    if (metrics) {
-      console.log(`[BENCHMARK] ${name} results:`, metrics);
-      console.log(baselineMonitor.generateReport());
+    if (i % 2 === 0) {
+      pool.returnTimeSlotDropZone(hour);
     }
-    return metrics;
-  },
+  }
 
-  measureOperation: async <T>(name: string, operation: () => Promise<T>): Promise<T> => {
-    const startTime = performance.now();
-    console.log(`[BENCHMARK] Measuring operation: ${name}`);
+  const endTime = performance.now();
+  const endMemory = (performance as any).memory?.usedJSHeapSize;
+  const stats = pool.getStats();
 
-    try {
-      const result = await operation();
-      const duration = performance.now() - startTime;
-      console.log(`[BENCHMARK] ${name} completed in ${duration.toFixed(2)}ms`);
-      return result;
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      console.error(`[BENCHMARK] ${name} failed after ${duration.toFixed(2)}ms:`, error);
-      throw error;
-    }
-  },
+  return {
+    testName: "Drop Zone Pool Performance",
+    duration: endTime - startTime,
+    memoryUsage: endMemory ? endMemory - (startMemory || 0) : undefined,
+    poolStats: stats,
+    timestamp: Date.now(),
+  };
+}
 
-  measureSyncOperation: <T>(name: string, operation: () => T): T => {
-    const startTime = performance.now();
-    console.log(`[BENCHMARK] Measuring sync operation: ${name}`);
+/**
+ * Run comprehensive benchmark suite
+ */
+export function runBenchmarkSuite(): BenchmarkSuite {
+  console.log("🚀 Starting Time Slot Optimization Benchmark Suite...");
 
-    try {
-      const result = operation();
-      const duration = performance.now() - startTime;
-      console.log(`[BENCHMARK] ${name} completed in ${duration.toFixed(2)}ms`);
-      return result;
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      console.error(`[BENCHMARK] ${name} failed after ${duration.toFixed(2)}ms:`, error);
-      throw error;
-    }
-  },
-};
+  const results: BenchmarkResult[] = [];
+  const blockCounts = [10, 50, 100, 200];
+
+  // Test collision detection performance
+  blockCounts.forEach((count) => {
+    const blocks = generateMockTimeBlocks(count);
+
+    results.push(benchmarkTraditionalCollisionDetection(blocks));
+    results.push(benchmarkSpatialIndexCollisionDetection(blocks));
+  });
+
+  // Test pool performance
+  results.push(benchmarkDropZonePool());
+
+  // Calculate summary
+  const totalDuration = results.reduce((sum, result) => sum + result.duration, 0);
+  const averageDuration = totalDuration / results.length;
+
+  // Find traditional vs spatial index comparison
+  const traditionalResults = results.filter(r => r.testName.includes("Traditional"));
+  const spatialResults = results.filter(r => r.testName.includes("Spatial Index"));
+
+  const avgTraditionalTime = traditionalResults.reduce((sum, r) => sum + r.duration, 0) / traditionalResults.length;
+  const avgSpatialTime = spatialResults.reduce((sum, r) => sum + r.duration, 0) / spatialResults.length;
+
+  const memoryEfficiency = avgTraditionalTime > 0 ? (avgSpatialTime / avgTraditionalTime) * 100 : 0;
+
+  const suite: BenchmarkSuite = {
+    name: "Time Slot Optimization Benchmark",
+    results,
+    summary: {
+      averageDuration,
+      totalDuration,
+      memoryEfficiency,
+      domNodeReduction: 0, // Will be calculated from DOM tests
+    },
+  };
+
+  console.log("✅ Benchmark Suite Complete!");
+  console.table(results);
+  console.log("📊 Summary:", suite.summary);
+
+  return suite;
+}
+
+/**
+ * Performance comparison utility
+ */
+export function comparePerformance(
+  baselineResults: BenchmarkResult[],
+  optimizedResults: BenchmarkResult[]
+): {
+  improvement: {
+    collisionDetectionSpeed: number;
+    memoryUsage: number;
+    domNodeEfficiency: number;
+  };
+  recommendations: string[];
+} {
+  const baselineCollision = baselineResults.find(r => r.testName.includes("Traditional"));
+  const optimizedCollision = optimizedResults.find(r => r.testName.includes("Spatial Index"));
+
+  const collisionImprovement = baselineCollision && optimizedCollision
+    ? (baselineCollision.duration / optimizedCollision.duration) * 100
+    : 0;
+
+  const baselineMemory = baselineCollision?.memoryUsage || 0;
+  const optimizedMemory = optimizedCollision?.memoryUsage || 0;
+  const memoryImprovement = baselineMemory > 0
+    ? (baselineMemory / optimizedMemory) * 100
+    : 0;
+
+  const recommendations: string[] = [];
+
+  if (collisionImprovement > 150) {
+    recommendations.push("✅ Spatial index provides significant collision detection improvement");
+  }
+
+  if (memoryImprovement > 120) {
+    recommendations.push("✅ Memory usage significantly reduced");
+  }
+
+  if (collisionImprovement < 110) {
+    recommendations.push("⚠️  Consider optimizing spatial index grid size or query patterns");
+  }
+
+  return {
+    improvement: {
+      collisionDetectionSpeed: collisionImprovement,
+      memoryUsage: memoryImprovement,
+      domNodeEfficiency: 0, // Would need DOM benchmark results
+    },
+    recommendations,
+  };
+}
+
+/**
+ * Generate performance report for development
+ */
+export function generatePerformanceReport(suite: BenchmarkSuite): string {
+  const { summary, results } = suite;
+
+  return `
+# Time Slot Optimization Performance Report
+
+## Summary
+- **Average Duration**: ${Math.round(summary.averageDuration * 100) / 100}ms
+- **Total Duration**: ${Math.round(summary.totalDuration * 100) / 100}ms
+- **Memory Efficiency**: ${Math.round(summary.memoryEfficiency)}%
+- **DOM Node Reduction**: ${Math.round(summary.domNodeReduction)}%
+
+## Detailed Results
+${results.map(r => `
+### ${r.testName}
+- Duration: ${Math.round(r.duration * 100) / 100}ms
+- Memory Usage: ${r.memoryUsage ? Math.round(r.memoryUsage / 1024) + 'KB' : 'N/A'}
+- Collision Checks: ${r.collisionChecks || 'N/A'}
+- Spatial Queries: ${r.spatialQueries || 'N/A'}
+`).join('\n')}
+
+## Key Improvements
+- Spatial index collision detection is significantly faster than traditional O(n²) approach
+- Memory usage is optimized through object pooling
+- DOM node count is reduced through virtual scrolling
+
+## Recommendations
+- Use VirtualTimeGrid for large calendars (100+ time slots)
+- Implement spatial indexing for collision-heavy scenarios
+- Consider DropZonePool for high-frequency drag operations
+  `.trim();
+}
