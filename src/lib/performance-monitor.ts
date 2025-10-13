@@ -1,6 +1,8 @@
 // Performance monitoring utilities for drag and drop optimization
 // This file provides comprehensive profiling tools for identifying bottlenecks
 
+import React from "react";
+
 export interface PerformanceMetrics {
   dragStartTime: number;
   dragEndTime: number;
@@ -10,6 +12,13 @@ export interface PerformanceMetrics {
   renderCount: number;
   conflictChecks: number;
   positionCalculations: number;
+  renderMetrics: {
+    totalRenderTime: number;
+    averageRenderTime: number;
+    slowRenderCount: number;
+    optimizedRenderCount: number;
+    cacheHitRate: number;
+  };
 }
 
 export interface DragPerformanceData {
@@ -77,6 +86,13 @@ class DragPerformanceMonitor {
         renderCount: 0,
         conflictChecks: 0,
         positionCalculations: 0,
+        renderMetrics: {
+          totalRenderTime: 0,
+          averageRenderTime: 0,
+          slowRenderCount: 0,
+          optimizedRenderCount: 0,
+          cacheHitRate: 0,
+        },
       },
       bottlenecks: [],
       recommendations: [],
@@ -132,6 +148,37 @@ class DragPerformanceMonitor {
     const session = this.dragSessions.get(dragId);
     if (session) {
       session.metrics.renderCount++;
+    }
+  }
+
+  recordRenderMetrics(dragId: string, metrics: {
+    renderTime: number;
+    cacheHit?: boolean;
+    optimized?: boolean;
+  }): void {
+    const session = this.dragSessions.get(dragId);
+    if (session) {
+      session.metrics.renderMetrics.totalRenderTime += metrics.renderTime;
+      session.metrics.renderCount++;
+
+      if (metrics.renderTime > 5) {
+        session.metrics.renderMetrics.slowRenderCount++;
+      }
+
+      if (metrics.optimized) {
+        session.metrics.renderMetrics.optimizedRenderCount++;
+      }
+
+      // Update average render time
+      const totalRenders = session.metrics.renderCount;
+      session.metrics.renderMetrics.averageRenderTime =
+        session.metrics.renderMetrics.totalRenderTime / totalRenders;
+
+      // Update cache hit rate
+      if (metrics.cacheHit !== undefined) {
+        const cacheHits = session.metrics.renderMetrics.cacheHitRate * (totalRenders - 1) + (metrics.cacheHit ? 1 : 0);
+        session.metrics.renderMetrics.cacheHitRate = cacheHits / totalRenders;
+      }
     }
   }
 
@@ -294,11 +341,11 @@ export class FrameRateMonitor {
 }
 
 // React render performance monitoring
-export const withRenderTracking = <P extends object>(
+export const withRenderTracking = <P extends Record<string, any>>(
   Component: React.ComponentType<P>,
   componentName: string
-): React.ComponentType<P> => {
-  return React.forwardRef<any, P>((props, ref) => {
+): React.FC<P> => {
+  const TrackedComponent = (props: P) => {
     const renderCount = React.useRef(0);
     const lastRenderTime = React.useRef(performance.now());
 
@@ -312,8 +359,11 @@ export const withRenderTracking = <P extends object>(
       console.warn(`[RENDER] ${componentName} rendered ${renderCount.current} times in ${timeSinceLastRender.toFixed(2)}ms`);
     }
 
-    return React.createElement(Component, { ...props, ref });
-  });
+    return React.createElement(Component, props);
+  };
+
+  TrackedComponent.displayName = `Tracked${componentName}`;
+  return TrackedComponent;
 };
 
 // Drag-specific performance hooks
@@ -337,8 +387,17 @@ export const useDragPerformanceTracking = (dragId: string) => {
     dragPerformanceMonitor.recordPositionCalculation(dragId);
   }, [dragId]);
 
+  const recordRenderMetrics = React.useCallback((metrics: {
+    renderTime: number;
+    cacheHit?: boolean;
+    optimized?: boolean;
+  }) => {
+    dragPerformanceMonitor.recordRenderMetrics(dragId, metrics);
+  }, [dragId]);
+
   return {
     recordConflictCheck,
     recordPositionCalculation,
+    recordRenderMetrics,
   };
 };
