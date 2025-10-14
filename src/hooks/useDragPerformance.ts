@@ -3,6 +3,15 @@ import { useDragStore, getDragPerformanceMetrics, resetDragPerformanceMetrics } 
 import { getBatchPerformanceMetrics } from "@/lib/batched-drag-updater";
 import { dragPerformanceMonitor } from "@/lib/performance-monitor";
 
+// Extended Performance interface for memory access
+interface PerformanceWithMemory extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 // Performance thresholds for drag operations
 interface DragPerformanceThresholds {
   maxUpdateInterval: number; // Maximum time between updates (ms)
@@ -112,8 +121,8 @@ export function useDragPerformance(config: DragPerformanceConfig = {}) {
 
       // Track memory usage if enabled
       let memoryUsage: number | undefined;
-      if (enableMemoryTracking && (performance as any).memory) {
-        memoryUsage = (performance as any).memory.usedJSHeapSize / (1024 * 1024); // MB
+      if (enableMemoryTracking && (performance as PerformanceWithMemory).memory) {
+        memoryUsage = (performance as PerformanceWithMemory).memory!.usedJSHeapSize / (1024 * 1024); // MB
       }
 
       // Track frame rate if enabled

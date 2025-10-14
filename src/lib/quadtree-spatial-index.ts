@@ -265,6 +265,14 @@ export class QuadTree {
   }
 
   /**
+   * Update quadtree bounds (public method for external access)
+   */
+  updateBounds(newBounds: Rectangle): void {
+    this.config.bounds = newBounds;
+    this.root = this.createNode(newBounds, 0);
+  }
+
+  /**
    * Get all items in quadtree
    */
   getAllItems(): Array<{ id: string; bounds: Rectangle; data: Event | Task }> {
@@ -432,8 +440,7 @@ export function getQuadTreePerformanceMetrics() {
  */
 export function initializeQuadTree(containerBounds: Rectangle): void {
   // Update quadtree bounds to match container
-  (dragQuadTree as any).config.bounds = containerBounds;
-  (dragQuadTree as any).root = (dragQuadTree as any).createNode(containerBounds, 0);
+  dragQuadTree.updateBounds(containerBounds);
 }
 
 /**

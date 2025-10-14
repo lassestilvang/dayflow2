@@ -15,6 +15,7 @@ import {
   type QuadTree
 } from "@/lib/quadtree-spatial-index";
 import { dragPerformanceMonitor } from "@/lib/performance-monitor";
+import { checkTimeConflict } from "@/lib/conflict-detection";
 import type { Event, Task } from "@/types";
 
 // Configuration for optimized conflict detection
@@ -139,7 +140,6 @@ export function useOptimizedConflictDetection(
         );
       } else {
         // Fallback to original method
-        const { checkTimeConflict } = require("@/lib/conflict-detection");
         conflictResult = checkTimeConflict(
           startTime,
           endTime,
@@ -168,7 +168,6 @@ export function useOptimizedConflictDetection(
 
       // Fallback to original method on error
       try {
-        const { checkTimeConflict } = require("@/lib/conflict-detection");
         return checkTimeConflict(startTime, endTime, events, tasks, excludeId);
       } catch (fallbackError) {
         return {
@@ -251,9 +250,27 @@ export function useOptimizedConflictDetection(
 
   // Generate performance recommendations
   const generatePerformanceRecommendations = useCallback((
-    timeIndexStats: any,
-    quadTreeStats: any,
-    customMetrics: any
+    timeIndexStats: {
+      bucketCount: number;
+      totalItems: number;
+      averageItemsPerBucket: number;
+      accessCount: number;
+      hitRate: number;
+      config: { bucketSize: number; maxBuckets: number; enableCompression: boolean };
+    } | null,
+    quadTreeStats: {
+      totalItems: number;
+      treeDepth: number;
+      nodeCount: number;
+      averageItemsPerNode: number;
+      itemCount: number;
+    } | null,
+    customMetrics: {
+      timeIndexUpdates: number;
+      quadTreeUpdates: number;
+      conflictChecks: number;
+      averageCheckTime: number;
+    }
   ) => {
     const recommendations: string[] = [];
 

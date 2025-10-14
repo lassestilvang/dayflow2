@@ -1,5 +1,32 @@
 import { dragPerformanceMonitor } from "./performance-monitor";
 
+// Touch event data interfaces
+interface TouchEventData {
+  touch: Touch;
+  originalEvent: TouchEvent;
+}
+
+interface TouchMoveData extends TouchEventData {
+  deltaX: number;
+  deltaY: number;
+  velocity: { x: number; y: number };
+}
+
+interface TouchEndData extends TouchEventData {
+  duration: number;
+  velocity: { x: number; y: number };
+  wasActivated: boolean;
+}
+
+interface DragActivateData {
+  startPosition: { x: number; y: number };
+  currentPosition: { x: number; y: number };
+}
+
+interface TouchCancelData {
+  originalEvent: TouchEvent;
+}
+
 // Touch event configuration
 interface TouchConfig {
   activationDistance: number; // Minimum distance before drag starts
@@ -37,7 +64,7 @@ interface TouchState {
 export class TouchManager {
   private config: TouchConfig;
   private touchState: TouchState | null = null;
-  private eventListeners: Map<string, Set<(event: any) => void>> = new Map();
+  private eventListeners: Map<string, Set<(event: TouchEventData | TouchMoveData | TouchEndData | DragActivateData | TouchCancelData) => void>> = new Map();
   private isEnabled = false;
 
   constructor(config: Partial<TouchConfig> = {}) {
@@ -257,8 +284,8 @@ export class TouchManager {
         }
       });
 
-      window.addEventListener('testPassive', null as any, opts);
-      window.removeEventListener('testPassive', null as any, opts);
+      window.addEventListener('testPassive', null, opts);
+      window.removeEventListener('testPassive', null, opts);
     } catch (e) {}
 
     return supportsPassive;
@@ -296,7 +323,7 @@ export class TouchManager {
   /**
    * Add event listener for touch events
    */
-  addEventListener(event: string, handler: (data: any) => void): () => void {
+  addEventListener(event: string, handler: (data: TouchEventData | TouchMoveData | TouchEndData | DragActivateData | TouchCancelData) => void): () => void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
@@ -311,7 +338,7 @@ export class TouchManager {
   /**
    * Emit custom touch event
    */
-  private emit(event: string, data: any): void {
+  private emit(event: string, data: TouchEventData | TouchMoveData | TouchEndData | DragActivateData | TouchCancelData): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.forEach(listener => {
@@ -365,7 +392,7 @@ export function useTouchOptimization() {
     setIsEnabled(false);
   }, []);
 
-  const addEventListener = React.useCallback((event: string, handler: (data: any) => void) => {
+  const addEventListener = React.useCallback((event: string, handler: (data: TouchEventData | TouchMoveData | TouchEndData | DragActivateData | TouchCancelData) => void) => {
     return touchManager.addEventListener(event, handler);
   }, []);
 

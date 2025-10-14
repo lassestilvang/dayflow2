@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useOptimizedConflictDetection } from "@/hooks/useOptimizedConflictDetection";
 import { getSpatialIndexStats } from "@/lib/optimized-conflict-detection";
 import { getQuadTreePerformanceMetrics } from "@/lib/quadtree-spatial-index";
+import type { Event, Task } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,8 @@ import { AlertCircle, CheckCircle, Clock, Database, Grid3X3 } from "lucide-react
 
 // Props for conflict detection monitor
 interface ConflictDetectionMonitorProps {
-  events: any[]; // Would be Event[] in real implementation
-  tasks: any[]; // Would be Task[] in real implementation
+  events: Event[];
+  tasks: Task[];
   isVisible?: boolean;
   position?: { top?: number; right?: number; bottom?: number; left?: number };
 }
@@ -31,13 +32,25 @@ export function ConflictDetectionMonitor({
   const [isExpanded, setIsExpanded] = useState(false);
   const [performanceHistory, setPerformanceHistory] = useState<Array<{
     timestamp: number;
-    timeIndexStats: any;
-    quadTreeStats: any;
+    timeIndexStats: {
+      bucketCount: number;
+      totalItems: number;
+      averageItemsPerBucket: number;
+      accessCount: number;
+      hitRate: number;
+      config: { bucketSize: number; maxBuckets: number; enableCompression: boolean };
+    };
+    quadTreeStats: {
+      totalItems: number;
+      treeDepth: number;
+      nodeCount: number;
+      averageItemsPerNode: number;
+      itemCount: number;
+    };
   }>>([]);
 
   const {
     performanceStats,
-    checkConflict,
     updateSpatialIndices,
   } = useOptimizedConflictDetection(events, tasks);
 
@@ -112,13 +125,13 @@ export function ConflictDetectionMonitor({
               Conflict Detection Monitor
             </CardTitle>
             <div className="flex items-center gap-1">
-              <Badge variant={performanceStats?.custom?.averageCheckTime < 5 ? "default" : "destructive"}>
-                {performanceStats?.custom?.averageCheckTime < 5 ? (
+              <Badge variant={(performanceStats?.custom?.averageCheckTime ?? 0) < 5 ? "default" : "destructive"}>
+                {(performanceStats?.custom?.averageCheckTime ?? 0) < 5 ? (
                   <CheckCircle className="w-3 h-3 mr-1" />
                 ) : (
                   <AlertCircle className="w-3 h-3 mr-1" />
                 )}
-                {performanceStats?.custom?.averageCheckTime.toFixed(1)}ms
+                {(performanceStats?.custom?.averageCheckTime ?? 0).toFixed(1)}ms
               </Badge>
               <Button
                 size="sm"
@@ -178,8 +191,8 @@ export function ConflictDetectionMonitor({
                   <div className="space-y-1">
                     <div className="flex justify-between">
                       <span>Avg Check Time:</span>
-                      <Badge variant={performanceStats?.custom?.averageCheckTime < 5 ? "default" : "destructive"}>
-                        {performanceStats?.custom?.averageCheckTime.toFixed(1)}ms
+                      <Badge variant={(performanceStats?.custom?.averageCheckTime ?? 0) < 5 ? "default" : "destructive"}>
+                        {(performanceStats?.custom?.averageCheckTime ?? 0).toFixed(1)}ms
                       </Badge>
                     </div>
                     <div className="flex justify-between">

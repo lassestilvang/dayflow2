@@ -3,7 +3,7 @@
 import React, { useMemo, useCallback, useEffect, useRef } from "react";
 import { useDragStore } from "@/lib/drag-store";
 import { useMobileDragOptimization, useTouchDragComponent, useMobileAnimations } from "@/hooks/useMobileDragOptimization";
-import { useOptimizedConflictDetection } from "@/hooks/useOptimizedConflictDetection";
+
 import { dragPerformanceMonitor } from "@/lib/performance-monitor";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ export function MobileOptimizedDrag({
   });
 
   const { dragProps } = useTouchDragComponent();
-  const { createBounceAnimation, createSlideAnimation } = useMobileAnimations();
+  const { createBounceAnimation } = useMobileAnimations();
 
   // Current drag state
   const isDragging = useDragStore(state => state.isDragging);
@@ -76,7 +76,7 @@ export function MobileOptimizedDrag({
     }
 
     // Record performance metrics
-    dragPerformanceMonitor.recordDragStart();
+    dragPerformanceMonitor.startDragSession(`mobile-drag-${Date.now()}`);
   }, [disabled, item, mobileOptimization, onDragStart, enableAnimations, createBounceAnimation]);
 
   // Handle drag end with cleanup
@@ -98,7 +98,14 @@ export function MobileOptimizedDrag({
     dragStartTimeRef.current = 0;
 
     // Record performance metrics
-    dragPerformanceMonitor.recordDragEnd();
+    // End the most recent drag session
+    const sessions = dragPerformanceMonitor.getActiveSessions();
+    if (sessions.length > 0) {
+      const lastSession = sessions[sessions.length - 1];
+      if (lastSession) {
+        dragPerformanceMonitor.endDragSession(lastSession.dragId);
+      }
+    }
   }, [mobileOptimization, item, onDragEnd]);
 
   // Apply mobile optimizations to element

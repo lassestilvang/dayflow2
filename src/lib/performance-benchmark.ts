@@ -68,27 +68,24 @@ export function generateMockTimeBlocks(count: number = 50): TimeBlock[] {
     };
 
     // Provide the full shape for Event when type is 'event'; Task shape otherwise
-    const data =
-      Math.random() > 0.5
-        ? ({
-            ...baseData,
-            attendees: [],
-            isShared: false,
-            calendarSource: "manual",
-          } as import("@/types").Event)
-        : ({
-            ...baseData,
-            subtasks: [],
-            isOverdue: false,
-            isCompleted: false,
-          } as import("@/types").Task);
+    const isEvent = Math.random() > 0.5;
+    const data = isEvent
+      ? ({
+          ...baseData,
+          attendees: [],
+          isShared: false,
+          calendarSource: "manual" as const,
+        } as import("@/types").Event)
+      : ({
+          ...baseData,
+          subtasks: [],
+          isOverdue: false,
+          isCompleted: false,
+        } as import("@/types").Task);
 
     blocks.push({
       id: `mock-block-${i}`,
-      type:
-        "type" in data && (data as any).attendees !== undefined
-          ? "event"
-          : "task",
+      type: isEvent ? "event" : "task",
       data,
       startTime,
       endTime,

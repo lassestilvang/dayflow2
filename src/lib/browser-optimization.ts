@@ -33,6 +33,15 @@ interface BrowserOptimizationStrategy {
   memoryLimit: number;
 }
 
+// Base configuration interface for adaptive performance
+interface AdaptivePerformanceConfig {
+  maxFrameRate?: number;
+  updateThrottle?: number;
+  enableGPUAcceleration?: boolean;
+  enableBatchedUpdates?: boolean;
+  enableAdvancedOptimizations?: boolean;
+}
+
 /**
  * Browser detection and capability analysis
  */
@@ -232,8 +241,8 @@ export class BrowserOptimizer {
         }
       });
 
-      window.addEventListener('testPassive', null as any, opts);
-      window.removeEventListener('testPassive', null as any, opts);
+      window.addEventListener('testPassive', null, opts);
+      window.removeEventListener('testPassive', null, opts);
     } catch (e) {}
 
     return supportsPassive;
@@ -473,7 +482,7 @@ export function useAdaptivePerformance() {
     setPerformanceLevel(level);
   }, [browser, capabilities, strategy]);
 
-  const getOptimizedConfig = React.useCallback((baseConfig: any) => {
+  const getOptimizedConfig = React.useCallback((baseConfig: AdaptivePerformanceConfig) => {
     const config = { ...baseConfig };
 
     switch (performanceLevel) {

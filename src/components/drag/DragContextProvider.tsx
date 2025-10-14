@@ -81,7 +81,7 @@ export function DragContextProvider({
       };
     }
 
-    const contextLifetime = performance.now() - performanceStartTimeRef.current;
+    void (performance.now() - performanceStartTimeRef.current);
 
     return {
       updateCount: dragState.isDragging ? 1 : 0, // Simplified for this context
@@ -96,7 +96,7 @@ export function DragContextProvider({
 
     startDrag: (item, position) => {
       if (enablePerformanceMonitoring) {
-        dragPerformanceMonitor.recordDragStart();
+        dragPerformanceMonitor.startDragSession(`drag-${Date.now()}`);
       }
 
       startDragOperation(item, position);
@@ -104,7 +104,14 @@ export function DragContextProvider({
 
     endDrag: () => {
       if (enablePerformanceMonitoring) {
-        dragPerformanceMonitor.recordDragEnd();
+        // End the most recent drag session
+        const sessions = dragPerformanceMonitor.getActiveSessions();
+        if (sessions.length > 0) {
+          const lastSession = sessions[sessions.length - 1];
+          if (lastSession) {
+            dragPerformanceMonitor.endDragSession(lastSession.dragId);
+          }
+        }
       }
 
       endDragOperation();
@@ -140,10 +147,11 @@ export function DragContextProvider({
   useEffect(() => {
     if (enablePerformanceMonitoring) {
       return () => {
-        const contextLifetime = performance.now() - performanceStartTimeRef.current;
+        void (performance.now() - performanceStartTimeRef.current);
 
         if (process.env.NODE_ENV === "development") {
-          console.log(`[DRAG CONTEXT] Provider lifetime: ${contextLifetime.toFixed(2)}ms`);
+          const currentLifetime = performance.now() - performanceStartTimeRef.current;
+          console.log(`[DRAG CONTEXT] Provider lifetime: ${currentLifetime.toFixed(2)}ms`);
         }
       };
     }
@@ -201,8 +209,10 @@ export function useDragOperations() {
     // Touch event handlers for mobile
     onTouchStart: (item: { id: string; type: "task" | "event" }, event: React.TouchEvent) => {
       const touch = event.touches[0];
-      const position = { x: touch.clientX, y: touch.clientY };
-      startDrag(item, position);
+      if (touch) {
+        const position = { x: touch.clientX, y: touch.clientY };
+        startDrag(item, position);
+      }
     },
 
     onTouchEnd: () => {
@@ -211,8 +221,10 @@ export function useDragOperations() {
 
     onTouchMove: (event: React.TouchEvent) => {
       const touch = event.touches[0];
-      const position = { x: touch.clientX, y: touch.clientY };
-      updatePosition(position);
+      if (touch) {
+        const position = { x: touch.clientX, y: touch.clientY };
+        updatePosition(position);
+      }
     },
   }), [startDrag, endDrag, updatePosition]);
 
