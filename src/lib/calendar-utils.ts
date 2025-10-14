@@ -70,6 +70,7 @@ export function calculateEventPosition(event: Event | Task): {
   top: number;
   height: number;
 } {
+  // Delegate to position cache for calculation and caching
   return positionCache.getPosition(event);
 }
 

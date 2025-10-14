@@ -71,40 +71,72 @@ export class PositionCache {
   }
 
   /**
-   * Get position from cache or calculate if not cached
-   */
-  getPosition(item: Event | Task): { top: number; height: number } {
-    const startTime =
-      typeof performance !== "undefined" ? performance.now() : Date.now();
-    const cacheKey = this.getCacheKey(item);
-    const entry = this.cache.get(cacheKey);
+    * Get position from cache or calculate if not cached
+    */
+   getPosition(item: Event | Task): { top: number; height: number } {
+     const startTime =
+       typeof performance !== "undefined" ? performance.now() : Date.now();
+     const cacheKey = this.getCacheKey(item);
+     const entry = this.cache.get(cacheKey);
 
-    // Check if entry exists and is still valid
-    if (entry && this.isEntryValid(entry)) {
-      // Update access statistics
-      entry.accessCount++;
-      entry.lastAccessed = Date.now();
+     // Check if entry exists and is still valid
+     if (entry && this.isEntryValid(entry)) {
+       // Update access statistics
+       entry.accessCount++;
+       entry.lastAccessed = Date.now();
 
-      if (this.config.enableMetrics) {
-        this.metrics.hits++;
-        this.recordAccessTime(performance.now() - startTime);
-      }
+       if (this.config.enableMetrics) {
+         this.metrics.hits++;
+         this.recordAccessTime(performance.now() - startTime);
+       }
 
-      return entry.position;
-    }
+       return entry.position;
+     }
 
-    // Cache miss - calculate position
-    if (this.config.enableMetrics) {
-      this.metrics.misses++;
-    }
+     // Cache miss - calculate position
+     if (this.config.enableMetrics) {
+       this.metrics.misses++;
+     }
 
-    const position = calculateEventPosition(item);
+     const position = this.calculatePosition(item);
 
-    // Store in cache
-    this.setPosition(cacheKey, position, item);
+     // Store in cache
+     this.setPosition(cacheKey, position, item);
 
-    return position;
-  }
+     return position;
+   }
+
+   /**
+    * Calculate position for an event/task in the calendar grid
+    * Grid starts at 6 AM and each hour is 60px
+    */
+   private calculatePosition(item: Event | Task): { top: number; height: number } {
+     console.log(`[PositionCache] Calculating position for item: ${item.id}`);
+
+     const startTime = "startTime" in item ? item.startTime : item.scheduledTime;
+     const endTime = "endTime" in item ? item.endTime : item.scheduledTime;
+
+     if (!startTime || !endTime) {
+       console.warn(`[PositionCache] Missing time data for item ${item.id}, using fallback`);
+       return { top: 0, height: 60 }; // Default fallback
+     }
+
+     const gridStartHour = 6; // 6 AM
+     const pixelsPerHour = 60;
+
+     // Calculate start position from 6 AM
+     const startHour = startTime.getHours() + startTime.getMinutes() / 60;
+     const top = Math.max(0, (startHour - gridStartHour) * pixelsPerHour);
+
+     // Calculate duration in hours
+     const durationMs = endTime.getTime() - startTime.getTime();
+     const durationHours = durationMs / (1000 * 60 * 60);
+     const height = Math.max(15, durationHours * pixelsPerHour); // Minimum 15px height
+
+     console.log(`[PositionCache] Calculated position for ${item.id}: top=${top}, height=${height}`);
+
+     return { top, height };
+   }
 
   /**
    * Store position in cache with dependencies
