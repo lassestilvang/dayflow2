@@ -4,18 +4,19 @@
  */
 
 import type { UniqueIdentifier } from "@dnd-kit/core";
+import React from "react";
 
 export interface PooledDropZone {
   id: string;
   ref: React.RefObject<HTMLElement | null>;
   isActive: boolean;
   lastUsed: number;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface DropZoneConfig {
   id: UniqueIdentifier;
-  data?: any;
+  data?: Record<string, unknown>;
   disabled?: boolean;
 }
 
@@ -43,7 +44,7 @@ export class DropZonePool {
     const key = String(id);
 
     // Check if we already have this zone in the pool
-    let pooledZone = this.pool.get(key);
+    const pooledZone = this.pool.get(key);
 
     if (pooledZone) {
       // Update the zone and mark as active
@@ -84,7 +85,9 @@ export class DropZonePool {
       return; // Zone wasn't active
     }
 
-    const pooledZone = Array.from(this.activeZones).find(zoneId => zoneId === key);
+    const pooledZone = Array.from(this.activeZones).find(
+      (zoneId) => zoneId === key
+    );
 
     if (pooledZone) {
       // Move from active to pool
@@ -106,17 +109,16 @@ export class DropZonePool {
    * Get all currently active drop zones
    */
   getActiveDropZones(): PooledDropZone[] {
-    return Array.from(this.activeZones)
-      .map(key => {
-        // Find the zone data (this is a simplified approach)
-        // In a real implementation, you might want to maintain a separate map
-        return {
-          id: key,
-          ref: React.createRef<HTMLElement>(),
-          isActive: true,
-          lastUsed: Date.now(),
-        };
-      });
+    return Array.from(this.activeZones).map((key) => {
+      // Find the zone data (this is a simplified approach)
+      // In a real implementation, you might want to maintain a separate map
+      return {
+        id: key,
+        ref: React.createRef<HTMLElement>(),
+        isActive: true,
+        lastUsed: Date.now(),
+      };
+    });
   }
 
   /**
@@ -131,7 +133,8 @@ export class DropZonePool {
     const activeCount = this.activeZones.size;
     const pooledCount = this.pool.size;
     const totalCount = activeCount + pooledCount;
-    const poolUtilization = this.maxPoolSize > 0 ? pooledCount / this.maxPoolSize : 0;
+    const poolUtilization =
+      this.maxPoolSize > 0 ? pooledCount / this.maxPoolSize : 0;
 
     return {
       activeCount,
@@ -239,7 +242,10 @@ export class TimeSlotDropZonePool extends DropZonePool {
   /**
    * Get a time slot drop zone with day-specific configuration
    */
-  getTimeSlotDropZone(hour: number, data?: any): PooledDropZone {
+  getTimeSlotDropZone(
+    hour: number,
+    data?: Record<string, unknown>
+  ): PooledDropZone {
     const config: DropZoneConfig = {
       id: `timeslot-${this.dayIndex}-${hour}`,
       data: {
@@ -264,7 +270,7 @@ export class TimeSlotDropZonePool extends DropZonePool {
    * Get all active time slot drop zones for this day
    */
   getActiveTimeSlotDropZones(): PooledDropZone[] {
-    return this.getActiveDropZones().filter(zone =>
+    return this.getActiveDropZones().filter((zone) =>
       zone.id.startsWith(`timeslot-${this.dayIndex}-`)
     );
   }

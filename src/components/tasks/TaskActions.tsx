@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  MoreVertical,
-  Edit,
-  Trash2,
-  Clock,
-  Tag,
-  Flag,
-} from "lucide-react";
+import { MoreVertical, Edit, Trash2, Clock, Tag, Flag } from "lucide-react";
 
 import type { Task, CategoryType } from "@/types";
 import { useAppStore } from "@/lib/store";
@@ -100,131 +93,124 @@ export function TaskActions({ task, onClose }: TaskActionsProps) {
 
           {/* Menu */}
           <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-popover shadow-lg z-50">
-              <div className="p-1">
-                {/* Edit */}
+            <div className="p-1">
+              {/* Edit */}
+              <button
+                onClick={handleEdit}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit</span>
+                <span className="ml-auto text-xs text-muted-foreground">E</span>
+              </button>
+
+              {/* Schedule */}
+              <button
+                onClick={handleSchedule}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
+              >
+                <Clock className="h-4 w-4" />
+                <span>Schedule</span>
+                <span className="ml-auto text-xs text-muted-foreground">S</span>
+              </button>
+
+              <div className="my-1 border-t" />
+
+              {/* Change Category */}
+              <div className="relative">
                 <button
-                  onClick={handleEdit}
+                  onClick={() => setShowCategoryMenu(!showCategoryMenu)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
                 >
-                  <Edit className="h-4 w-4" />
-                  <span>Edit</span>
+                  <Tag className="h-4 w-4" />
+                  <span>Category</span>
                   <span className="ml-auto text-xs text-muted-foreground">
-                    E
+                    C
                   </span>
                 </button>
 
-                {/* Schedule */}
-                <button
-                  onClick={handleSchedule}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
-                >
-                  <Clock className="h-4 w-4" />
-                  <span>Schedule</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    S
-                  </span>
-                </button>
-
-                <div className="my-1 border-t" />
-
-                {/* Change Category */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
-                  >
-                    <Tag className="h-4 w-4" />
-                    <span>Category</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      C
-                    </span>
-                  </button>
-
-                  {showCategoryMenu && (
-                    <div className="absolute left-full top-0 ml-1 w-40 rounded-md border bg-popover shadow-lg z-50">
-                        <div className="p-1">
-                          {categories.map((category) => (
-                            <button
-                              key={category.id}
-                              onClick={() => handleChangeCategory(category.id)}
-                              className={cn(
-                                "w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
-                                task.category === category.id && "bg-accent"
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  "h-3 w-3 rounded-full",
-                                  category.color
-                                )}
-                              />
-                              <span>{category.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                </div>
-
-                {/* Change Priority */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowPriorityMenu(!showPriorityMenu)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
-                  >
-                    <Flag className="h-4 w-4" />
-                    <span>Priority</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      P
-                    </span>
-                  </button>
-
-                  {showPriorityMenu && (
-                    <div className="absolute left-full top-0 ml-1 w-32 rounded-md border bg-popover shadow-lg z-50">
-                        <div className="p-1">
-                          {priorities.map((priority) => (
-                            <button
-                              key={priority.id}
-                              onClick={() => handleChangePriority(priority.id)}
-                              className={cn(
-                                "w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
-                                task.priority === priority.id && "bg-accent"
-                              )}
-                            >
-                              <Flag
-                                className={cn(
-                                  "h-3 w-3",
-                                  priority.id === "high" && "text-red-500",
-                                  priority.id === "medium" && "text-yellow-500",
-                                  priority.id === "low" && "text-blue-500"
-                                )}
-                              />
-                              <span>{priority.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                </div>
-
-                <div className="my-1 border-t" />
-
-                {/* Delete */}
-                <button
-                  onClick={handleDelete}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>Delete</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    D
-                  </span>
-                </button>
+                {showCategoryMenu && (
+                  <div className="absolute left-full top-0 ml-1 w-40 rounded-md border bg-popover shadow-lg z-50">
+                    <div className="p-1">
+                      {categories.map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => handleChangeCategory(category.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
+                            task.category === category.id && "bg-accent"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "h-3 w-3 rounded-full",
+                              category.color
+                            )}
+                          />
+                          <span>{category.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+
+              {/* Change Priority */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors"
+                >
+                  <Flag className="h-4 w-4" />
+                  <span>Priority</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    P
+                  </span>
+                </button>
+
+                {showPriorityMenu && (
+                  <div className="absolute left-full top-0 ml-1 w-32 rounded-md border bg-popover shadow-lg z-50">
+                    <div className="p-1">
+                      {priorities.map((priority) => (
+                        <button
+                          key={priority.id}
+                          onClick={() => handleChangePriority(priority.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
+                            task.priority === priority.id && "bg-accent"
+                          )}
+                        >
+                          <Flag
+                            className={cn(
+                              "h-3 w-3",
+                              priority.id === "high" && "text-red-500",
+                              priority.id === "medium" && "text-yellow-500",
+                              priority.id === "low" && "text-blue-500"
+                            )}
+                          />
+                          <span>{priority.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="my-1 border-t" />
+
+              {/* Delete */}
+              <button
+                onClick={handleDelete}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+                <span className="ml-auto text-xs text-muted-foreground">D</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

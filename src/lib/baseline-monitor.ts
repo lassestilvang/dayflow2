@@ -1,7 +1,10 @@
 // Baseline performance monitoring for drag and drop optimization
 // This module establishes baseline metrics for comparison after each optimization phase
 
-import { dragPerformanceMonitor, type DragPerformanceData } from './performance-monitor';
+import {
+  dragPerformanceMonitor,
+  type DragPerformanceData,
+} from "./performance-monitor";
 
 export interface BaselineMetrics {
   timestamp: number;
@@ -44,8 +47,8 @@ export interface PerformanceBenchmark {
   target: number;
   current: number;
   unit: string;
-  status: 'pass' | 'fail' | 'warning';
-  trend: 'improving' | 'degrading' | 'stable';
+  status: "pass" | "fail" | "warning";
+  trend: "improving" | "degrading" | "stable";
 }
 
 class BaselineMonitor {
@@ -74,7 +77,7 @@ class BaselineMonitor {
     this.storeUpdateCount = 0;
     this.dragStartTime = 0;
 
-    console.log('[BASELINE] Started baseline collection');
+    console.log("[BASELINE] Started baseline collection");
   }
 
   stopCollection(): BaselineMetrics | null {
@@ -93,7 +96,8 @@ class BaselineMonitor {
     const collisionMetrics = this.calculateCollisionDetectionMetrics();
 
     // Calculate store update metrics
-    const storeUpdateMetrics = this.calculateStoreUpdateMetrics(collectionDuration);
+    const storeUpdateMetrics =
+      this.calculateStoreUpdateMetrics(collectionDuration);
 
     // Get time slot creation metrics
     const timeSlotMetrics = this.getTimeSlotCreationMetrics();
@@ -113,7 +117,7 @@ class BaselineMonitor {
 
     this.metrics.push(baseline);
 
-    console.log('[BASELINE] Collection completed:', baseline);
+    console.log("[BASELINE] Collection completed:", baseline);
     return baseline;
   }
 
@@ -142,7 +146,9 @@ class BaselineMonitor {
   recordDragEnd(): void {
     if (this.dragStartTime > 0) {
       const duration = performance.now() - this.dragStartTime;
-      console.log(`[BASELINE] Drag operation completed in ${duration.toFixed(2)}ms`);
+      console.log(
+        `[BASELINE] Drag operation completed in ${duration.toFixed(2)}ms`
+      );
     }
   }
 
@@ -153,12 +159,18 @@ class BaselineMonitor {
   recordTimeSlotCreationEnd(): void {
     if (this.timeSlotCreationStart > 0) {
       const duration = performance.now() - this.timeSlotCreationStart;
-      console.log(`[BASELINE] Time slot creation took ${duration.toFixed(2)}ms`);
+      console.log(
+        `[BASELINE] Time slot creation took ${duration.toFixed(2)}ms`
+      );
     }
   }
 
   private getMemoryMetrics() {
-    const memory = (performance as any).memory;
+    const memory = (
+      performance as unknown as {
+        memory?: { usedJSHeapSize: number; totalJSHeapSize: number };
+      }
+    ).memory;
     if (!memory) {
       return {
         initial: 0,
@@ -229,7 +241,10 @@ class BaselineMonitor {
   }
 
   private calculateStoreUpdateMetrics(collectionDuration: number) {
-    const frequency = collectionDuration > 0 ? (this.storeUpdateCount / collectionDuration) * 1000 : 0;
+    const frequency =
+      collectionDuration > 0
+        ? (this.storeUpdateCount / collectionDuration) * 1000
+        : 0;
 
     return {
       count: this.storeUpdateCount,
@@ -261,67 +276,81 @@ class BaselineMonitor {
 
     return [
       {
-        name: 'Frame Rate',
+        name: "Frame Rate",
         target: 60,
         current: latest.frameRate.average,
-        unit: 'fps',
-        status: latest.frameRate.average >= 60 ? 'pass' : latest.frameRate.average >= 30 ? 'warning' : 'fail',
-        trend: 'stable', // Would be calculated by comparing with previous measurements
+        unit: "fps",
+        status:
+          latest.frameRate.average >= 60
+            ? "pass"
+            : latest.frameRate.average >= 30
+            ? "warning"
+            : "fail",
+        trend: "stable", // Would be calculated by comparing with previous measurements
       },
       {
-        name: 'Memory Usage Increase',
+        name: "Memory Usage Increase",
         target: 50,
         current: latest.memoryUsage.increaseMB,
-        unit: 'MB',
-        status: latest.memoryUsage.increaseMB < 50 ? 'pass' : 'fail',
-        trend: 'stable',
+        unit: "MB",
+        status: latest.memoryUsage.increaseMB < 50 ? "pass" : "fail",
+        trend: "stable",
       },
       {
-        name: 'Collision Detection Time',
+        name: "Collision Detection Time",
         target: 100,
         current: latest.collisionDetection.maxTime,
-        unit: 'ms',
-        status: latest.collisionDetection.maxTime < 100 ? 'pass' : 'fail',
-        trend: 'stable',
+        unit: "ms",
+        status: latest.collisionDetection.maxTime < 100 ? "pass" : "fail",
+        trend: "stable",
       },
       {
-        name: 'Store Update Frequency',
+        name: "Store Update Frequency",
         target: 50,
         current: latest.storeUpdates.frequency,
-        unit: 'updates/sec',
-        status: latest.storeUpdates.frequency < 50 ? 'pass' : 'fail',
-        trend: 'stable',
+        unit: "updates/sec",
+        status: latest.storeUpdates.frequency < 50 ? "pass" : "fail",
+        trend: "stable",
       },
       {
-        name: 'Time Slot Creation Count',
+        name: "Time Slot Creation Count",
         target: 119,
         current: latest.timeSlotCreation.count,
-        unit: 'instances',
-        status: 'pass', // This is the current baseline
-        trend: 'stable',
+        unit: "instances",
+        status: "pass", // This is the current baseline
+        trend: "stable",
       },
     ];
   }
 
   generateReport(): string {
     const latest = this.metrics[this.metrics.length - 1];
-    if (!latest) return 'No baseline data collected yet';
+    if (!latest) return "No baseline data collected yet";
 
     const benchmarks = this.generateBenchmarks();
 
-    let report = '=== BASELINE PERFORMANCE REPORT ===\n\n';
-    report += `Collection Time: ${new Date(latest.timestamp).toISOString()}\n\n`;
+    let report = "=== BASELINE PERFORMANCE REPORT ===\n\n";
+    report += `Collection Time: ${new Date(
+      latest.timestamp
+    ).toISOString()}\n\n`;
 
-    report += '📊 KEY METRICS:\n';
+    report += "📊 KEY METRICS:\n";
     report += `Frame Rate: ${latest.frameRate.average}fps (min: ${latest.frameRate.min}, max: ${latest.frameRate.max})\n`;
-    report += `Memory Increase: ${latest.memoryUsage.increaseMB.toFixed(2)}MB\n`;
+    report += `Memory Increase: ${latest.memoryUsage.increaseMB.toFixed(
+      2
+    )}MB\n`;
     report += `Collision Detection: ${latest.collisionDetection.averageTime}ms avg (${latest.collisionDetection.totalChecks} checks)\n`;
     report += `Store Updates: ${latest.storeUpdates.count} total (${latest.storeUpdates.frequency}/sec)\n`;
     report += `Time Slots: ${latest.timeSlotCreation.count} instances\n\n`;
 
-    report += '🎯 BENCHMARKS:\n';
-    benchmarks.forEach(benchmark => {
-      const status = benchmark.status === 'pass' ? '✅' : benchmark.status === 'warning' ? '⚠️' : '❌';
+    report += "🎯 BENCHMARKS:\n";
+    benchmarks.forEach((benchmark) => {
+      const status =
+        benchmark.status === "pass"
+          ? "✅"
+          : benchmark.status === "warning"
+          ? "⚠️"
+          : "❌";
       report += `${status} ${benchmark.name}: ${benchmark.current}${benchmark.unit} (target: ${benchmark.target}${benchmark.unit})\n`;
     });
 

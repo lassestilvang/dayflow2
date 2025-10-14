@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  eslint: {
+    // We already run eslint separately; avoid Next's legacy runner erroring on options
+    ignoreDuringBuilds: true,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

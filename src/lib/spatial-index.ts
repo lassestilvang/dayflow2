@@ -13,7 +13,7 @@ export interface BoundingBox {
 export interface SpatialObject {
   id: string;
   bounds: BoundingBox;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface CollisionResult {
@@ -27,11 +27,12 @@ export interface CollisionResult {
 export class SpatialIndex {
   private grid: Map<string, SpatialObject[]> = new Map();
   private gridSize: number;
-  private bounds: BoundingBox;
 
-  constructor(gridSize: number = 60, bounds: BoundingBox = { x: 0, y: 0, width: 200, height: 1020 }) {
+  constructor(
+    gridSize: number = 60,
+    _bounds: BoundingBox = { x: 0, y: 0, width: 200, height: 1020 }
+  ) {
     this.gridSize = gridSize;
-    this.bounds = bounds;
   }
 
   /**
@@ -46,12 +47,7 @@ export class SpatialIndex {
   /**
    * Convert grid coordinates to world coordinates
    */
-  private gridToWorld(gridX: number, gridY: number): { x: number; y: number } {
-    return {
-      x: gridX * this.gridSize,
-      y: gridY * this.gridSize,
-    };
-  }
+  // Removed unused helper gridToWorld
 
   /**
    * Get grid key for coordinates
@@ -66,7 +62,10 @@ export class SpatialIndex {
   private getObjectGridCells(object: SpatialObject): string[] {
     const { bounds } = object;
     const topLeft = this.worldToGrid(bounds.x, bounds.y);
-    const bottomRight = this.worldToGrid(bounds.x + bounds.width, bounds.y + bounds.height);
+    const bottomRight = this.worldToGrid(
+      bounds.x + bounds.width,
+      bounds.y + bounds.height
+    );
 
     const cells: string[] = [];
 
@@ -86,7 +85,7 @@ export class SpatialIndex {
   insert(object: SpatialObject): void {
     const cells = this.getObjectGridCells(object);
 
-    cells.forEach(cellKey => {
+    cells.forEach((cellKey) => {
       if (!this.grid.has(cellKey)) {
         this.grid.set(cellKey, []);
       }
@@ -99,7 +98,7 @@ export class SpatialIndex {
    */
   remove(objectId: string): void {
     for (const [cellKey, objects] of this.grid.entries()) {
-      const filteredObjects = objects.filter(obj => obj.id !== objectId);
+      const filteredObjects = objects.filter((obj) => obj.id !== objectId);
       if (filteredObjects.length !== objects.length) {
         if (filteredObjects.length === 0) {
           this.grid.delete(cellKey);
@@ -124,7 +123,10 @@ export class SpatialIndex {
   query(bounds: BoundingBox): SpatialObject[] {
     const results = new Set<SpatialObject>();
     const topLeft = this.worldToGrid(bounds.x, bounds.y);
-    const bottomRight = this.worldToGrid(bounds.x + bounds.width, bounds.y + bounds.height);
+    const bottomRight = this.worldToGrid(
+      bounds.x + bounds.width,
+      bounds.y + bounds.height
+    );
 
     // Check all grid cells that the query bounds span
     for (let gridX = topLeft.gridX; gridX <= bottomRight.gridX; gridX++) {
@@ -134,7 +136,7 @@ export class SpatialIndex {
 
         if (cellObjects) {
           // Filter objects that actually intersect with the query bounds
-          cellObjects.forEach(obj => {
+          cellObjects.forEach((obj) => {
             if (this.boundsIntersect(bounds, obj.bounds)) {
               results.add(obj);
             }
@@ -149,7 +151,11 @@ export class SpatialIndex {
   /**
    * Query objects within a radius of a point
    */
-  queryRadius(centerX: number, centerY: number, radius: number): CollisionResult[] {
+  queryRadius(
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): CollisionResult[] {
     const radiusBounds: BoundingBox = {
       x: centerX - radius,
       y: centerY - radius,
@@ -160,11 +166,16 @@ export class SpatialIndex {
     const objects = this.query(radiusBounds);
 
     return objects
-      .map(obj => {
-        const distance = this.distance(centerX, centerY, obj.bounds.x + obj.bounds.width / 2, obj.bounds.y + obj.bounds.height / 2);
+      .map((obj) => {
+        const distance = this.distance(
+          centerX,
+          centerY,
+          obj.bounds.x + obj.bounds.width / 2,
+          obj.bounds.y + obj.bounds.height / 2
+        );
         return { object: obj, distance };
       })
-      .filter(result => result.distance <= radius)
+      .filter((result) => result.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
   }
 
@@ -195,7 +206,7 @@ export class SpatialIndex {
   getAllObjects(): SpatialObject[] {
     const objects = new Set<SpatialObject>();
     for (const cellObjects of this.grid.values()) {
-      cellObjects.forEach(obj => objects.add(obj));
+      cellObjects.forEach((obj) => objects.add(obj));
     }
     return Array.from(objects);
   }
@@ -210,7 +221,11 @@ export class SpatialIndex {
   /**
    * Get statistics about the spatial index
    */
-  getStats(): { totalObjects: number; gridCells: number; averageObjectsPerCell: number } {
+  getStats(): {
+    totalObjects: number;
+    gridCells: number;
+    averageObjectsPerCell: number;
+  } {
     const totalObjects = this.getAllObjects().length;
     const gridCells = this.grid.size;
     const averageObjectsPerCell = gridCells > 0 ? totalObjects / gridCells : 0;
@@ -246,7 +261,11 @@ export class TimeSlotSpatialIndex extends SpatialIndex {
   /**
    * Create a spatial object for a time slot
    */
-  createTimeSlotObject(dayIndex: number, hour: number, slotHeight: number = 60): SpatialObject {
+  createTimeSlotObject(
+    dayIndex: number,
+    hour: number,
+    slotHeight: number = 60
+  ): SpatialObject {
     const y = hour * slotHeight;
     return {
       id: `timeslot-${dayIndex}-${hour}`,
@@ -263,7 +282,13 @@ export class TimeSlotSpatialIndex extends SpatialIndex {
   /**
    * Create a spatial object for a time block
    */
-  createTimeBlockObject(blockId: string, top: number, height: number, left: number = 0, width: number = 100): SpatialObject {
+  createTimeBlockObject(
+    blockId: string,
+    top: number,
+    height: number,
+    left: number = 0,
+    width: number = 100
+  ): SpatialObject {
     return {
       id: `timeblock-${blockId}`,
       bounds: {
@@ -279,7 +304,11 @@ export class TimeSlotSpatialIndex extends SpatialIndex {
   /**
    * Query time slots that intersect with a drag position
    */
-  queryDragIntersection(dragX: number, dragY: number, radius: number = 30): CollisionResult[] {
+  queryDragIntersection(
+    dragX: number,
+    dragY: number,
+    radius: number = 30
+  ): CollisionResult[] {
     return this.queryRadius(dragX, dragY, radius);
   }
 
@@ -287,7 +316,7 @@ export class TimeSlotSpatialIndex extends SpatialIndex {
    * Get all time slots for a specific day
    */
   getTimeSlotsForDay(dayIndex: number): SpatialObject[] {
-    return this.getAllObjects().filter(obj =>
+    return this.getAllObjects().filter((obj) =>
       obj.id.startsWith(`timeslot-${dayIndex}-`)
     );
   }
@@ -296,8 +325,8 @@ export class TimeSlotSpatialIndex extends SpatialIndex {
    * Get all time blocks
    */
   getTimeBlocks(): SpatialObject[] {
-    return this.getAllObjects().filter(obj =>
-      obj.id.startsWith('timeblock-')
+    return this.getAllObjects().filter((obj) =>
+      obj.id.startsWith("timeblock-")
     );
   }
 }

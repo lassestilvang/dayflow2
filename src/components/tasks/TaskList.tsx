@@ -89,7 +89,7 @@ export function TaskList({ tasks }: TaskListProps) {
                 </div>
 
                 {/* Tasks in Group */}
-                {groupTasks.map((task, index) => (
+                {groupTasks.map((task) => (
                   <div key={task.id}>
                     <TaskItem task={task} />
                   </div>
@@ -118,7 +118,7 @@ export function TaskList({ tasks }: TaskListProps) {
           </div>
 
           {/* Completed Tasks */}
-          {groupedTasks.completed.map((task, index) => (
+          {groupedTasks.completed.map((task) => (
             <div key={task.id}>
               <TaskItem task={task} />
             </div>

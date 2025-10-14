@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { useState, useCallback, useMemo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import {
@@ -24,14 +26,16 @@ import {
   getCategoryColor,
   calculateSubtaskProgress,
 } from "@/lib/task-utils";
-import { dragPerformanceMonitor, useDragPerformanceTracking } from "@/lib/performance-monitor";
+import { useDragPerformanceTracking } from "@/lib/performance-monitor";
 import { PerformanceProfiler } from "@/components/devtools/PerformanceProfiler";
 
 interface TaskItemProps {
   task: Task;
 }
 
-export const TaskItemOptimized = React.memo(function TaskItemOptimized({ task }: TaskItemProps) {
+export const TaskItemOptimized = React.memo(function TaskItemOptimized({
+  task,
+}: TaskItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -44,51 +48,73 @@ export const TaskItemOptimized = React.memo(function TaskItemOptimized({ task }:
   const { recordConflictCheck } = useDragPerformanceTracking(`task-${task.id}`);
 
   // Memoize draggable setup to avoid recreating on every render
-  const draggableConfig = useMemo(() => ({
-    id: `task-${task.id}`,
-    data: {
-      id: task.id,
-      type: "task",
-      isScheduled: !!task.scheduledTime,
-    },
-    disabled: task.isCompleted,
-  }), [task.id, task.scheduledTime, task.isCompleted]);
+  const draggableConfig = useMemo(
+    () => ({
+      id: `task-${task.id}`,
+      data: {
+        id: task.id,
+        type: "task",
+        isScheduled: !!task.scheduledTime,
+      },
+      disabled: task.isCompleted,
+    }),
+    [task.id, task.scheduledTime, task.isCompleted]
+  );
 
   // Setup draggable for unscheduled tasks from sidebar
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable(draggableConfig);
+  const { attributes, listeners, setNodeRef, isDragging } =
+    useDraggable(draggableConfig);
 
   // Memoize category colors to avoid recalculation
-  const categoryColors = useMemo(() => ({
-    work: "border-l-blue-500",
-    family: "border-l-green-500",
-    personal: "border-l-orange-500",
-    travel: "border-l-purple-500",
-  }), []);
+  const categoryColors = useMemo(
+    () => ({
+      work: "border-l-blue-500",
+      family: "border-l-green-500",
+      personal: "border-l-orange-500",
+      travel: "border-l-purple-500",
+    }),
+    []
+  );
 
   // Memoize subtask progress calculation
-  const subtaskProgress = useMemo(() => calculateSubtaskProgress(task.subtasks), [task.subtasks]);
+  const subtaskProgress = useMemo(
+    () => calculateSubtaskProgress(task.subtasks),
+    [task.subtasks]
+  );
 
   // Optimized event handlers with useCallback
-  const handleToggleComplete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleTaskComplete(task.id);
-  }, [toggleTaskComplete, task.id]);
+  const handleToggleComplete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toggleTaskComplete(task.id);
+    },
+    [toggleTaskComplete, task.id]
+  );
 
-  const handleToggleSubtask = useCallback((subtaskId: string, completed: boolean) => {
-    updateSubtask(task.id, subtaskId, { completed: !completed });
-  }, [updateSubtask, task.id]);
+  const handleToggleSubtask = useCallback(
+    (subtaskId: string, completed: boolean) => {
+      updateSubtask(task.id, subtaskId, { completed: !completed });
+    },
+    [updateSubtask, task.id]
+  );
 
-  const handleDelete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm(`Delete task "${task.title}"?`)) {
-      deleteTask(task.id);
-    }
-  }, [deleteTask, task.id, task.title]);
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (confirm(`Delete task "${task.title}"?`)) {
+        deleteTask(task.id);
+      }
+    },
+    [deleteTask, task.id, task.title]
+  );
 
-  const handleEdit = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedTaskId(task.id);
-  }, [setSelectedTaskId, task.id]);
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectedTaskId(task.id);
+    },
+    [setSelectedTaskId, task.id]
+  );
 
   const handleExpandToggle = useCallback(() => {
     setIsExpanded(!isExpanded);
@@ -118,10 +144,7 @@ export const TaskItemOptimized = React.memo(function TaskItemOptimized({ task }:
           isDragging && "opacity-50 cursor-grabbing"
         )}
       >
-        <div
-          onClick={handleExpandToggle}
-          className="p-3 cursor-pointer"
-        >
+        <div onClick={handleExpandToggle} className="p-3 cursor-pointer">
           <div className="flex items-start gap-3">
             {/* Drag Handle */}
             <button
@@ -143,7 +166,9 @@ export const TaskItemOptimized = React.memo(function TaskItemOptimized({ task }:
             <button
               onClick={handleToggleComplete}
               className="mt-0.5 rounded-full hover:bg-accent transition-colors p-1"
-              aria-label={task.isCompleted ? "Mark incomplete" : "Mark complete"}
+              aria-label={
+                task.isCompleted ? "Mark incomplete" : "Mark complete"
+              }
             >
               {task.isCompleted ? (
                 <Check className="h-5 w-5 text-primary" />

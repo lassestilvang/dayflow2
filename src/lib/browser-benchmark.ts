@@ -3,8 +3,8 @@
  * Can be run in browser console for real performance testing
  */
 
-import { SpatialIndex, TimeSlotSpatialIndex } from "./spatial-index";
-import { DropZonePool, TimeSlotDropZonePool } from "./drop-zone-pool";
+import { TimeSlotSpatialIndex } from "./spatial-index";
+import { TimeSlotDropZonePool } from "./drop-zone-pool";
 
 // Make functions available globally for browser console testing
 declare global {
@@ -47,8 +47,17 @@ export function generateMockBlocks(count: number = 50) {
 /**
  * Traditional collision detection benchmark
  */
-export function benchmarkTraditionalCollision(blocks: any[]) {
-  console.log(`🔍 Testing traditional collision detection with ${blocks.length} blocks...`);
+export function benchmarkTraditionalCollision(
+  blocks: Array<{
+    id: string;
+    startTime: Date;
+    endTime: Date;
+    duration: number;
+  }>
+) {
+  console.log(
+    `🔍 Testing traditional collision detection with ${blocks.length} blocks...`
+  );
 
   const startTime = performance.now();
   let collisionChecks = 0;
@@ -57,12 +66,11 @@ export function benchmarkTraditionalCollision(blocks: any[]) {
     for (let j = i + 1; j < blocks.length; j++) {
       collisionChecks++;
 
-      const block1 = blocks[i];
-      const block2 = blocks[j];
+      const block1 = blocks[i]!;
+      const block2 = blocks[j]!;
 
       const overlap = !(
-        block1.endTime <= block2.startTime ||
-        block2.endTime <= block1.startTime
+        block1.endTime <= block2.startTime || block2.endTime <= block1.startTime
       );
 
       if (overlap) {
@@ -72,7 +80,9 @@ export function benchmarkTraditionalCollision(blocks: any[]) {
   }
 
   const duration = performance.now() - startTime;
-  const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+  const memoryUsage =
+    (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+      ?.usedJSHeapSize || 0;
 
   console.log(`⏱️  Traditional collision: ${duration.toFixed(2)}ms`);
   console.log(`🔢 Collision checks: ${collisionChecks}`);
@@ -84,8 +94,17 @@ export function benchmarkTraditionalCollision(blocks: any[]) {
 /**
  * Spatial index collision detection benchmark
  */
-export function benchmarkSpatialIndexCollision(blocks: any[]) {
-  console.log(`🌐 Testing spatial index collision detection with ${blocks.length} blocks...`);
+export function benchmarkSpatialIndexCollision(
+  blocks: Array<{
+    id: string;
+    startTime: Date;
+    endTime: Date;
+    duration: number;
+  }>
+) {
+  console.log(
+    `🌐 Testing spatial index collision detection with ${blocks.length} blocks...`
+  );
 
   const startTime = performance.now();
   const spatialIndex = new TimeSlotSpatialIndex();
@@ -120,10 +139,11 @@ export function benchmarkSpatialIndexCollision(blocks: any[]) {
     const nearbyBlocks = spatialIndex.query(bounds);
 
     nearbyBlocks
-      .filter((nearby: any) => nearby.id !== block.id)
-      .forEach((nearby: any) => {
-        const nearbyBlock = nearby.data;
-        const overlap = !(
+      .filter((nearby) => nearby.id !== block.id)
+      .forEach((nearby) => {
+        const nearbyBlock = nearby.data as { startTime: Date; endTime: Date };
+        // compute to simulate work
+        void (
           block.endTime <= nearbyBlock.startTime ||
           nearbyBlock.endTime <= block.startTime
         );
@@ -131,7 +151,9 @@ export function benchmarkSpatialIndexCollision(blocks: any[]) {
   });
 
   const duration = performance.now() - startTime;
-  const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+  const memoryUsage =
+    (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+      ?.usedJSHeapSize || 0;
 
   console.log(`⏱️  Spatial index collision: ${duration.toFixed(2)}ms`);
   console.log(`🔢 Spatial queries: ${spatialQueries}`);
@@ -152,7 +174,7 @@ export function benchmarkDropZonePool() {
 
   for (let i = 0; i < iterations; i++) {
     const hour = Math.floor(Math.random() * 17) + 6;
-    const zone = pool.getTimeSlotDropZone(hour, { test: `data-${i}` });
+    pool.getTimeSlotDropZone(hour, { test: `data-${i}` });
 
     if (i % 3 === 0) {
       pool.returnTimeSlotDropZone(hour);
@@ -181,27 +203,36 @@ export function benchmarkVirtualScrolling() {
   const startTime = performance.now();
 
   // Simulate virtual scrolling calculations
-  for (let scrollTop = 0; scrollTop < totalSlots * slotHeight; scrollTop += 10) {
+  for (
+    let scrollTop = 0;
+    scrollTop < totalSlots * slotHeight;
+    scrollTop += 10
+  ) {
     const startIndex = Math.max(0, Math.floor(scrollTop / slotHeight) - 5);
     const endIndex = Math.min(
       totalSlots - 1,
       Math.floor((scrollTop + 600) / slotHeight) + 5
     );
 
-    const visibleCount = endIndex - startIndex + 1;
+    // compute visibleCount to simulate workload without unused variable
+    void (endIndex - startIndex + 1);
 
     // Simulate rendering only visible slots
     for (let i = startIndex; i <= endIndex; i++) {
       // Simulate slot rendering work
       const slotTop = i * slotHeight;
-      const isVisible = slotTop >= scrollTop && slotTop <= scrollTop + 600;
+      void (slotTop >= scrollTop && slotTop <= scrollTop + 600);
     }
   }
 
   const duration = performance.now() - startTime;
 
   console.log(`⏱️  Virtual scrolling: ${duration.toFixed(2)}ms`);
-  console.log(`📊 Rendered ${visibleSlots} of ${totalSlots} slots (${Math.round((visibleSlots/totalSlots)*100)}%)`);
+  console.log(
+    `📊 Rendered ${visibleSlots} of ${totalSlots} slots (${Math.round(
+      (visibleSlots / totalSlots) * 100
+    )}%)`
+  );
 
   return { duration, visibleSlots, totalSlots };
 }
@@ -214,7 +245,7 @@ export function runTimeSlotBenchmark() {
 
   const blockCounts = [20, 50, 100];
 
-  blockCounts.forEach(count => {
+  blockCounts.forEach((count) => {
     console.log(`\n📋 Testing with ${count} blocks:`);
     console.log("─".repeat(50));
 
@@ -223,7 +254,10 @@ export function runTimeSlotBenchmark() {
     const traditional = benchmarkTraditionalCollision(blocks);
     const spatial = benchmarkSpatialIndexCollision(blocks);
 
-    const improvement = traditional.duration > 0 ? (traditional.duration / spatial.duration).toFixed(1) : "∞";
+    const improvement =
+      traditional.duration > 0
+        ? (traditional.duration / spatial.duration).toFixed(1)
+        : "∞";
     console.log(`🚀 Performance improvement: ${improvement}x faster`);
   });
 
@@ -251,9 +285,23 @@ export function comparePerformance() {
   const virtual = benchmarkVirtualScrolling();
 
   console.log("\n📊 Summary:");
-  console.log(`Collision Detection: ${traditional.duration > 0 ? (traditional.duration / spatial.duration).toFixed(1) : "∞"}x improvement`);
-  console.log(`Memory Efficiency: Pool reduces allocations by ~${Math.round(pool.stats.poolUtilization * 100)}%`);
-  console.log(`DOM Efficiency: Virtual scrolling renders ~${Math.round((virtual.visibleSlots/virtual.totalSlots)*100)}% of slots`);
+  console.log(
+    `Collision Detection: ${
+      traditional.duration > 0
+        ? (traditional.duration / spatial.duration).toFixed(1)
+        : "∞"
+    }x improvement`
+  );
+  console.log(
+    `Memory Efficiency: Pool reduces allocations by ~${Math.round(
+      pool.stats.poolUtilization * 100
+    )}%`
+  );
+  console.log(
+    `DOM Efficiency: Virtual scrolling renders ~${Math.round(
+      (virtual.visibleSlots / virtual.totalSlots) * 100
+    )}% of slots`
+  );
 
   return {
     traditional,
@@ -264,10 +312,12 @@ export function comparePerformance() {
 }
 
 // Make functions available globally
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.runTimeSlotBenchmark = runTimeSlotBenchmark;
-  window.benchmarkCollisionDetection = () => benchmarkTraditionalCollision(generateMockBlocks(50));
-  window.benchmarkSpatialIndex = () => benchmarkSpatialIndexCollision(generateMockBlocks(50));
+  window.benchmarkCollisionDetection = () =>
+    benchmarkTraditionalCollision(generateMockBlocks(50));
+  window.benchmarkSpatialIndex = () =>
+    benchmarkSpatialIndexCollision(generateMockBlocks(50));
   window.benchmarkDropZonePool = benchmarkDropZonePool;
 }
 

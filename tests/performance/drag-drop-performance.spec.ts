@@ -9,14 +9,22 @@ test.describe("Drag and Drop Performance", () => {
     // Enable performance monitoring
     await page.evaluate(() => {
       // Start performance monitoring
-      (window as any).performanceMonitor?.startMonitoring?.();
+      (
+        window as unknown as {
+          performanceMonitor?: { startMonitoring?: () => void };
+        }
+      ).performanceMonitor?.startMonitoring?.();
     });
   });
 
   test.afterEach(async ({ page }) => {
     // Collect performance metrics
     const metrics = await page.evaluate(() => {
-      return (window as any).performanceMonitor?.generateReport?.();
+      return (
+        window as unknown as {
+          performanceMonitor?: { generateReport?: () => string };
+        }
+      ).performanceMonitor?.generateReport?.();
     });
 
     if (metrics) {
@@ -35,14 +43,15 @@ test.describe("Drag and Drop Performance", () => {
       const frameRatePromise = page.evaluate(() => {
         return new Promise<number>((resolve) => {
           let frameCount = 0;
-          let lastTime = performance.now();
+          const lastTime = performance.now();
 
           const monitor = () => {
             frameCount++;
             const now = performance.now();
             const deltaTime = now - lastTime;
 
-            if (deltaTime >= 1000) { // After 1 second
+            if (deltaTime >= 1000) {
+              // After 1 second
               const fps = Math.round((frameCount * 1000) / deltaTime);
               resolve(fps);
               return;
@@ -73,7 +82,10 @@ test.describe("Drag and Drop Performance", () => {
 
   test("memory usage stays within limits during drag", async ({ page }) => {
     const initialMemory = await page.evaluate(() => {
-      return (performance as any).memory?.usedJSHeapSize || 0;
+      return (
+        (performance as unknown as { memory?: { usedJSHeapSize: number } })
+          .memory?.usedJSHeapSize || 0
+      );
     });
 
     const task = page.locator('[data-testid="task-item"]').first();
@@ -95,7 +107,10 @@ test.describe("Drag and Drop Performance", () => {
       }
 
       const finalMemory = await page.evaluate(() => {
-        return (performance as any).memory?.usedJSHeapSize || 0;
+        return (
+          (performance as unknown as { memory?: { usedJSHeapSize: number } })
+            .memory?.usedJSHeapSize || 0
+        );
       });
 
       const memoryIncrease = finalMemory - initialMemory;
@@ -134,7 +149,9 @@ test.describe("Drag and Drop Performance", () => {
 
       // Move over multiple potential collision areas
       for (let i = 0; i < 10; i++) {
-        await page.mouse.move(taskBox.x + (i * 50), taskBox.y + 100, { steps: 5 });
+        await page.mouse.move(taskBox.x + i * 50, taskBox.y + 100, {
+          steps: 5,
+        });
         await page.waitForTimeout(50);
       }
 
@@ -157,8 +174,9 @@ test.describe("Drag and Drop Performance", () => {
 
       // Check GPU acceleration status
       const gpuAcceleration = await page.evaluate(() => {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const canvas = document.createElement("canvas");
+        const gl =
+          canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
         return !!gl;
       });
 

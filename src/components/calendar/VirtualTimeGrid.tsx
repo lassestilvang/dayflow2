@@ -1,8 +1,8 @@
-import React, { useMemo, useRef, useEffect, useState, useCallback } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { format, isToday } from "date-fns";
 import type { TimeBlock as TimeBlockType } from "@/types";
-import { TimeBlock } from "./TimeBlock";
+import { MemoizedTimeBlock } from "./MemoizedTimeBlock";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
@@ -12,6 +12,8 @@ import {
   groupOverlappingBlocks,
   createTimeOnDay,
 } from "@/lib/calendar-utils";
+import { DragMemoizationProvider } from "./DragMemoizationContext";
+import { DragStateBoundary, createBoundaryConfig } from "./DragStateBoundary";
 
 interface VirtualTimeGridProps {
   date: Date;
@@ -109,6 +111,13 @@ export const VirtualTimeGrid = React.memo(function VirtualTimeGrid({
   const hourSlots = useMemo(() => getHourSlots(), []);
   const openEventModal = useAppStore((state) => state.openEventModal);
 
+  // Use render optimization
+  // const _optimizer = useRenderOptimizer(`virtual-grid-${date.toISOString()}`, {
+  //   throttleMs: 16,
+  //   priority: 3,
+  //   enableProfiling: true,
+  // });
+
   // Memoize day-specific blocks to avoid recalculating on every render
   const dayBlocksData = useMemo(
     () => getBlocksForDay(timeBlocks, date),
@@ -121,7 +130,7 @@ export const VirtualTimeGrid = React.memo(function VirtualTimeGrid({
     [dayBlocksData]
   );
 
-  // Memoize position calculations for each block
+  // Memoize position calculations for each block using cached positions
   const blockPositions = useMemo(() => {
     const positions = new Map<string, { top: number; height: number }>();
     dayBlocksData.forEach((block) => {
@@ -202,11 +211,13 @@ export const VirtualTimeGrid = React.memo(function VirtualTimeGrid({
     const slots = [];
     for (let i = visibleRange.startIndex; i <= visibleRange.endIndex; i++) {
       const hour = hourSlots[i];
-      slots.push({
-        index: i,
-        hour,
-        hasBlocks: hasBlocksInSlot(hour),
-      });
+      if (hour !== undefined) {
+        slots.push({
+          index: i,
+          hour,
+          hasBlocks: hasBlocksInSlot(hour),
+        });
+      }
     }
     return slots;
   }, [visibleRange, hourSlots, hasBlocksInSlot]);
@@ -234,75 +245,82 @@ export const VirtualTimeGrid = React.memo(function VirtualTimeGrid({
   const totalHeight = hourSlots.length * slotHeight;
 
   return (
-    <div className="relative flex flex-col" style={{ minWidth: "200px", width: "200px" }}>
-      {/* Day header */}
-      <div
-        className={cn(
-          "sticky top-0 z-20 border-b border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-          "px-4 py-3 text-center",
-          isToday(date) && "bg-primary/5"
-        )}
+    <DragMemoizationProvider optimizationLevel="moderate">
+      <DragStateBoundary
+        boundaryId={`virtual-grid-${date.toISOString()}`}
+        {...createBoundaryConfig.calendarGrid()}
       >
-        <div className="text-xs font-medium text-muted-foreground uppercase">
-          {format(date, "EEE")}
-        </div>
-        <div
-          className={cn(
-            "mt-1 text-2xl font-bold",
-            isToday(date) && "text-primary"
-          )}
-        >
-          {format(date, "d")}
-        </div>
-      </div>
-
-      {/* Virtual scrolling container */}
-      <div
-        ref={scrollElementRef}
-        className="relative flex-1 overflow-auto"
-        style={{ height: containerHeight }}
-        onScroll={handleScroll}
-      >
-        <div style={{ height: totalHeight, position: "relative" }}>
-          {/* Render only visible slots */}
-          {visibleSlots.map(({ index, hour, hasBlocks }) => (
-            <VirtualTimeSlot
-              key={`${date.toISOString()}-${hour}`}
-              day={date}
-              hour={hour}
-              hasBlocks={hasBlocks}
-              onClick={() => handleTimeSlotClick(hour)}
-              style={{
-                position: "absolute",
-                top: index * slotHeight,
-                width: "100%",
-                height: slotHeight,
-              }}
-              isVisible={true}
-            />
-          ))}
-
-          {/* Time blocks positioned absolutely */}
+        <div className="relative flex flex-col" style={{ minWidth: "200px", width: "200px" }}>
+          {/* Day header */}
           <div
-            className="absolute top-0 left-0 right-0 pointer-events-none"
-            style={{ height: totalHeight }}
+            className={cn(
+              "sticky top-0 z-20 border-b border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+              "px-4 py-3 text-center",
+              isToday(date) && "bg-primary/5"
+            )}
           >
-            <div className="relative h-full pointer-events-auto">
-              {dayBlocks.map(({ block, top, height, left, width }) => (
-                <TimeBlock
-                  key={block.id}
-                  block={block}
-                  top={top}
-                  height={height}
-                  left={left}
-                  width={width}
-                  onClick={() => onBlockClick?.(block)}
+            <div className="text-xs font-medium text-muted-foreground uppercase">
+              {format(date, "EEE")}
+            </div>
+            <div
+              className={cn(
+                "mt-1 text-2xl font-bold",
+                isToday(date) && "text-primary"
+              )}
+            >
+              {format(date, "d")}
+            </div>
+          </div>
+
+          {/* Virtual scrolling container */}
+          <div
+            ref={scrollElementRef}
+            className="relative flex-1 overflow-auto"
+            style={{ height: containerHeight }}
+            onScroll={handleScroll}
+          >
+            <div style={{ height: totalHeight, position: "relative" }}>
+              {/* Render only visible slots */}
+              {visibleSlots.map(({ index, hour, hasBlocks }) => (
+                <VirtualTimeSlot
+                  key={`${date.toISOString()}-${hour}`}
+                  day={date}
+                  hour={hour}
+                  hasBlocks={hasBlocks}
+                  onClick={() => handleTimeSlotClick(hour)}
+                  style={{
+                    position: "absolute",
+                    top: index * slotHeight,
+                    width: "100%",
+                    height: slotHeight,
+                  }}
+                  isVisible={true}
                 />
               ))}
+
+              {/* Time blocks positioned absolutely */}
+              <div
+                className="absolute top-0 left-0 right-0 pointer-events-none"
+                style={{ height: totalHeight }}
+              >
+                <div className="relative h-full pointer-events-auto">
+                  {dayBlocks.map(({ block, top, height, left, width }) => (
+                    <MemoizedTimeBlock
+                      key={block.id}
+                      block={block}
+                      top={top}
+                      height={height}
+                      left={left}
+                      width={width}
+                      onClick={() => onBlockClick?.(block)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DragStateBoundary>
+    </DragMemoizationProvider>
   );
 });

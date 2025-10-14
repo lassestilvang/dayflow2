@@ -4,8 +4,8 @@
 
 import type { TimeBlock } from "@/types";
 import { getHourSlots } from "./calendar-utils";
-import { SpatialIndex, TimeSlotSpatialIndex } from "./spatial-index";
-import { DropZonePool, TimeSlotDropZonePool } from "./drop-zone-pool";
+import { TimeSlotSpatialIndex } from "./spatial-index";
+import { TimeSlotDropZonePool } from "./drop-zone-pool";
 
 export interface BenchmarkResult {
   testName: string;
@@ -14,7 +14,12 @@ export interface BenchmarkResult {
   domNodes?: number;
   collisionChecks?: number;
   spatialQueries?: number;
-  poolStats?: any;
+  poolStats?: {
+    activeCount: number;
+    pooledCount: number;
+    totalCount: number;
+    poolUtilization: number;
+  };
   timestamp: number;
 }
 
@@ -38,9 +43,12 @@ export function generateMockTimeBlocks(count: number = 50): TimeBlock[] {
   const today = new Date();
 
   for (let i = 0; i < count; i++) {
-    const startHour = hourSlots[Math.floor(Math.random() * hourSlots.length)];
+    const startHour = hourSlots[Math.floor(Math.random() * hourSlots.length)]!;
     const duration = Math.floor(Math.random() * 3) + 1; // 1-3 hours
-    const endHour = Math.min(startHour + duration, hourSlots[hourSlots.length - 1]);
+    const endHour = Math.min(
+      startHour + duration,
+      hourSlots[hourSlots.length - 1]!
+    );
 
     const startTime = new Date(today);
     startTime.setHours(startHour, 0, 0, 0);
@@ -48,19 +56,40 @@ export function generateMockTimeBlocks(count: number = 50): TimeBlock[] {
     const endTime = new Date(today);
     endTime.setHours(endHour, 0, 0, 0);
 
+    const baseData = {
+      id: `mock-${i}`,
+      title: `Mock Block ${i}`,
+      startTime,
+      endTime,
+      category: "work",
+      userId: "test-user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Provide the full shape for Event when type is 'event'; Task shape otherwise
+    const data =
+      Math.random() > 0.5
+        ? ({
+            ...baseData,
+            attendees: [],
+            isShared: false,
+            calendarSource: "manual",
+          } as import("@/types").Event)
+        : ({
+            ...baseData,
+            subtasks: [],
+            isOverdue: false,
+            isCompleted: false,
+          } as import("@/types").Task);
+
     blocks.push({
       id: `mock-block-${i}`,
-      type: Math.random() > 0.5 ? "task" : "event",
-      data: {
-        id: `mock-${i}`,
-        title: `Mock Block ${i}`,
-        startTime,
-        endTime,
-        category: "work",
-        userId: "test-user",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any,
+      type:
+        "type" in data && (data as any).attendees !== undefined
+          ? "event"
+          : "task",
+      data,
       startTime,
       endTime,
       duration: duration * 60,
@@ -73,9 +102,13 @@ export function generateMockTimeBlocks(count: number = 50): TimeBlock[] {
 /**
  * Benchmark traditional collision detection (O(n²))
  */
-export function benchmarkTraditionalCollisionDetection(blocks: TimeBlock[]): BenchmarkResult {
+export function benchmarkTraditionalCollisionDetection(
+  blocks: TimeBlock[]
+): BenchmarkResult {
   const startTime = performance.now();
-  const startMemory = (performance as any).memory?.usedJSHeapSize;
+  const startMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
 
   let collisionChecks = 0;
 
@@ -84,13 +117,12 @@ export function benchmarkTraditionalCollisionDetection(blocks: TimeBlock[]): Ben
     for (let j = i + 1; j < blocks.length; j++) {
       collisionChecks++;
 
-      const block1 = blocks[i];
-      const block2 = blocks[j];
+      const block1 = blocks[i]!;
+      const block2 = blocks[j]!;
 
       // Simple overlap check
       const overlap = !(
-        block1.endTime <= block2.startTime ||
-        block2.endTime <= block1.startTime
+        block1.endTime <= block2.startTime || block2.endTime <= block1.startTime
       );
 
       if (overlap) {
@@ -100,7 +132,9 @@ export function benchmarkTraditionalCollisionDetection(blocks: TimeBlock[]): Ben
   }
 
   const endTime = performance.now();
-  const endMemory = (performance as any).memory?.usedJSHeapSize;
+  const endMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
 
   return {
     testName: "Traditional Collision Detection",
@@ -114,9 +148,13 @@ export function benchmarkTraditionalCollisionDetection(blocks: TimeBlock[]): Ben
 /**
  * Benchmark spatial index collision detection (O(log n))
  */
-export function benchmarkSpatialIndexCollisionDetection(blocks: TimeBlock[]): BenchmarkResult {
+export function benchmarkSpatialIndexCollisionDetection(
+  blocks: TimeBlock[]
+): BenchmarkResult {
   const startTime = performance.now();
-  const startMemory = (performance as any).memory?.usedJSHeapSize;
+  const startMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
 
   const spatialIndex = new TimeSlotSpatialIndex();
   let spatialQueries = 0;
@@ -133,7 +171,7 @@ export function benchmarkSpatialIndexCollisionDetection(blocks: TimeBlock[]): Be
     spatialIndex.insert({
       id: block.id,
       bounds,
-      data: block,
+      data: block as unknown as Record<string, unknown>,
     });
   });
 
@@ -153,7 +191,7 @@ export function benchmarkSpatialIndexCollisionDetection(blocks: TimeBlock[]): Be
     nearbyBlocks
       .filter((nearby) => nearby.id !== block.id)
       .forEach((nearby) => {
-        const nearbyBlock = nearby.data as TimeBlock;
+        const nearbyBlock = nearby.data as unknown as TimeBlock;
         const overlap = !(
           block.endTime <= nearbyBlock.startTime ||
           nearbyBlock.endTime <= block.startTime
@@ -166,7 +204,9 @@ export function benchmarkSpatialIndexCollisionDetection(blocks: TimeBlock[]): Be
   });
 
   const endTime = performance.now();
-  const endMemory = (performance as any).memory?.usedJSHeapSize;
+  const endMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
 
   return {
     testName: "Spatial Index Collision Detection",
@@ -185,15 +225,19 @@ export function benchmarkDOMRendering(
   renderCallback: (count: number) => void
 ): BenchmarkResult {
   const startTime = performance.now();
-  const startMemory = (performance as any).memory?.usedJSHeapSize;
-  const initialDomNodes = document.querySelectorAll('*').length;
+  const startMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
+  const initialDomNodes = document.querySelectorAll("*").length;
 
   // Simulate rendering slots
   renderCallback(slotCount);
 
   const endTime = performance.now();
-  const endMemory = (performance as any).memory?.usedJSHeapSize;
-  const finalDomNodes = document.querySelectorAll('*').length;
+  const endMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
+  const finalDomNodes = document.querySelectorAll("*").length;
 
   return {
     testName: `DOM Rendering (${slotCount} slots)`,
@@ -209,7 +253,9 @@ export function benchmarkDOMRendering(
  */
 export function benchmarkDropZonePool(): BenchmarkResult {
   const startTime = performance.now();
-  const startMemory = (performance as any).memory?.usedJSHeapSize;
+  const startMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
 
   const pool = new TimeSlotDropZonePool(0); // Day index 0
   const iterations = 1000;
@@ -217,7 +263,7 @@ export function benchmarkDropZonePool(): BenchmarkResult {
   // Simulate pool operations
   for (let i = 0; i < iterations; i++) {
     const hour = Math.floor(Math.random() * 17) + 6;
-    const zone = pool.getTimeSlotDropZone(hour, { test: `data-${i}` });
+    pool.getTimeSlotDropZone(hour, { test: `data-${i}` });
 
     if (i % 2 === 0) {
       pool.returnTimeSlotDropZone(hour);
@@ -225,7 +271,9 @@ export function benchmarkDropZonePool(): BenchmarkResult {
   }
 
   const endTime = performance.now();
-  const endMemory = (performance as any).memory?.usedJSHeapSize;
+  const endMemory = (
+    performance as unknown as { memory?: { usedJSHeapSize: number } }
+  ).memory?.usedJSHeapSize;
   const stats = pool.getStats();
 
   return {
@@ -258,17 +306,29 @@ export function runBenchmarkSuite(): BenchmarkSuite {
   results.push(benchmarkDropZonePool());
 
   // Calculate summary
-  const totalDuration = results.reduce((sum, result) => sum + result.duration, 0);
+  const totalDuration = results.reduce(
+    (sum, result) => sum + result.duration,
+    0
+  );
   const averageDuration = totalDuration / results.length;
 
   // Find traditional vs spatial index comparison
-  const traditionalResults = results.filter(r => r.testName.includes("Traditional"));
-  const spatialResults = results.filter(r => r.testName.includes("Spatial Index"));
+  const traditionalResults = results.filter((r) =>
+    r.testName.includes("Traditional")
+  );
+  const spatialResults = results.filter((r) =>
+    r.testName.includes("Spatial Index")
+  );
 
-  const avgTraditionalTime = traditionalResults.reduce((sum, r) => sum + r.duration, 0) / traditionalResults.length;
-  const avgSpatialTime = spatialResults.reduce((sum, r) => sum + r.duration, 0) / spatialResults.length;
+  const avgTraditionalTime =
+    traditionalResults.reduce((sum, r) => sum + r.duration, 0) /
+    traditionalResults.length;
+  const avgSpatialTime =
+    spatialResults.reduce((sum, r) => sum + r.duration, 0) /
+    spatialResults.length;
 
-  const memoryEfficiency = avgTraditionalTime > 0 ? (avgSpatialTime / avgTraditionalTime) * 100 : 0;
+  const memoryEfficiency =
+    avgTraditionalTime > 0 ? (avgSpatialTime / avgTraditionalTime) * 100 : 0;
 
   const suite: BenchmarkSuite = {
     name: "Time Slot Optimization Benchmark",
@@ -302,23 +362,29 @@ export function comparePerformance(
   };
   recommendations: string[];
 } {
-  const baselineCollision = baselineResults.find(r => r.testName.includes("Traditional"));
-  const optimizedCollision = optimizedResults.find(r => r.testName.includes("Spatial Index"));
+  const baselineCollision = baselineResults.find((r) =>
+    r.testName.includes("Traditional")
+  );
+  const optimizedCollision = optimizedResults.find((r) =>
+    r.testName.includes("Spatial Index")
+  );
 
-  const collisionImprovement = baselineCollision && optimizedCollision
-    ? (baselineCollision.duration / optimizedCollision.duration) * 100
-    : 0;
+  const collisionImprovement =
+    baselineCollision && optimizedCollision
+      ? (baselineCollision.duration / optimizedCollision.duration) * 100
+      : 0;
 
   const baselineMemory = baselineCollision?.memoryUsage || 0;
   const optimizedMemory = optimizedCollision?.memoryUsage || 0;
-  const memoryImprovement = baselineMemory > 0
-    ? (baselineMemory / optimizedMemory) * 100
-    : 0;
+  const memoryImprovement =
+    baselineMemory > 0 ? (baselineMemory / optimizedMemory) * 100 : 0;
 
   const recommendations: string[] = [];
 
   if (collisionImprovement > 150) {
-    recommendations.push("✅ Spatial index provides significant collision detection improvement");
+    recommendations.push(
+      "✅ Spatial index provides significant collision detection improvement"
+    );
   }
 
   if (memoryImprovement > 120) {
@@ -326,7 +392,9 @@ export function comparePerformance(
   }
 
   if (collisionImprovement < 110) {
-    recommendations.push("⚠️  Consider optimizing spatial index grid size or query patterns");
+    recommendations.push(
+      "⚠️  Consider optimizing spatial index grid size or query patterns"
+    );
   }
 
   return {
@@ -355,13 +423,19 @@ export function generatePerformanceReport(suite: BenchmarkSuite): string {
 - **DOM Node Reduction**: ${Math.round(summary.domNodeReduction)}%
 
 ## Detailed Results
-${results.map(r => `
+${results
+  .map(
+    (r) => `
 ### ${r.testName}
 - Duration: ${Math.round(r.duration * 100) / 100}ms
-- Memory Usage: ${r.memoryUsage ? Math.round(r.memoryUsage / 1024) + 'KB' : 'N/A'}
-- Collision Checks: ${r.collisionChecks || 'N/A'}
-- Spatial Queries: ${r.spatialQueries || 'N/A'}
-`).join('\n')}
+- Memory Usage: ${
+      r.memoryUsage ? Math.round(r.memoryUsage / 1024) + "KB" : "N/A"
+    }
+- Collision Checks: ${r.collisionChecks || "N/A"}
+- Spatial Queries: ${r.spatialQueries || "N/A"}
+`
+  )
+  .join("\n")}
 
 ## Key Improvements
 - Spatial index collision detection is significantly faster than traditional O(n²) approach

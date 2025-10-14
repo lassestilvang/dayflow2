@@ -210,7 +210,7 @@ export const VirtualTimeGridWithMonitoring = React.memo(function VirtualTimeGrid
   // Record scroll performance
   useEffect(() => {
     if (enablePerformanceMonitoring) {
-      performanceMonitor.recordScroll(visibleRange);
+      performanceMonitor.recordScroll({ start: visibleRange.startIndex, end: visibleRange.endIndex });
     }
   }, [visibleRange, performanceMonitor, enablePerformanceMonitoring]);
 
@@ -219,11 +219,13 @@ export const VirtualTimeGridWithMonitoring = React.memo(function VirtualTimeGrid
     const slots = [];
     for (let i = visibleRange.startIndex; i <= visibleRange.endIndex; i++) {
       const hour = hourSlots[i];
-      slots.push({
-        index: i,
-        hour,
-        hasBlocks: hasBlocksInSlot(hour),
-      });
+      if (hour !== undefined) {
+        slots.push({
+          index: i,
+          hour,
+          hasBlocks: hasBlocksInSlot(hour),
+        });
+      }
     }
     return slots;
   }, [visibleRange, hourSlots, hasBlocksInSlot]);

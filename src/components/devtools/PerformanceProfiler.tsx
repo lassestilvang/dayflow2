@@ -1,17 +1,35 @@
 "use client";
 
-import React, { Profiler, useEffect, useState } from 'react';
-import { dragPerformanceMonitor } from '@/lib/performance-monitor';
+import React, { Profiler, useEffect, useState } from "react";
+import { dragPerformanceMonitor } from "@/lib/performance-monitor";
 
 interface PerformanceProfilerProps {
   children: React.ReactNode;
   name: string;
-  onRender?: (id: string, phase: string, actualDuration: number, baseDuration: number, startTime: number, commitTime: number) => void;
+  onRender?: (
+    id: string,
+    phase: string,
+    actualDuration: number,
+    baseDuration: number,
+    startTime: number,
+    commitTime: number
+  ) => void;
 }
 
 // React Profiler wrapper with performance monitoring
-export function PerformanceProfiler({ children, name, onRender }: PerformanceProfilerProps) {
-  const handleRender = (id: string, phase: string, actualDuration: number, baseDuration: number, startTime: number, commitTime: number) => {
+export function PerformanceProfiler({
+  children,
+  name,
+  onRender,
+}: PerformanceProfilerProps) {
+  const handleRender = (
+    id: string,
+    phase: string,
+    actualDuration: number,
+    baseDuration: number,
+    startTime: number,
+    commitTime: number
+  ) => {
     // Record render in our performance monitor
     dragPerformanceMonitor.recordRender(id);
 
@@ -50,10 +68,13 @@ export function useRenderTracking(componentName: string) {
   useEffect(() => {
     // Log excessive renders
     if (renderCount.current > 10 && timeSinceLastRender < 100) {
-      console.warn(`[RENDER TRACKING] ${componentName} is rendering frequently:`, {
-        renderCount: renderCount.current,
-        timeSinceLastRender: `${timeSinceLastRender.toFixed(2)}ms`,
-      });
+      console.warn(
+        `[RENDER TRACKING] ${componentName} is rendering frequently:`,
+        {
+          renderCount: renderCount.current,
+          timeSinceLastRender: `${timeSinceLastRender.toFixed(2)}ms`,
+        }
+      );
     }
   });
 
@@ -67,25 +88,32 @@ export function useRenderTracking(componentName: string) {
 export function withRenderTracking<P extends object>(
   Component: React.ComponentType<P>,
   componentName: string
-): React.ComponentType<P> {
-  const TrackedComponent = React.forwardRef<any, P>((props, ref) => {
-    const { renderCount, timeSinceLastRender } = useRenderTracking(componentName);
+): React.FC<P> {
+  const TrackedComponent = (props: P) => {
+    // const { renderCount, timeSinceLastRender } = useRenderTracking(componentName);
 
-    return React.createElement(Component, { ...props, ref });
-  });
+    return <Component {...props} />;
+  };
 
   TrackedComponent.displayName = `withRenderTracking(${componentName})`;
   return TrackedComponent;
 }
 
 // Drag-specific profiler for monitoring drag operations
-export function DragProfiler({ children, dragId }: { children: React.ReactNode; dragId: string }) {
+export function DragProfiler({
+  children,
+  dragId,
+}: {
+  children: React.ReactNode;
+  dragId: string;
+}) {
   const [isDragActive, setIsDragActive] = useState(false);
 
   useEffect(() => {
     // Monitor drag state changes
     const checkDragState = () => {
-      const isDragging = document.querySelector('[data-is-dragging="true"]') !== null;
+      const isDragging =
+        document.querySelector('[data-is-dragging="true"]') !== null;
       setIsDragActive(isDragging);
     };
 
@@ -96,7 +124,12 @@ export function DragProfiler({ children, dragId }: { children: React.ReactNode; 
     return () => clearInterval(interval);
   }, []);
 
-  const handleRender = (id: string, phase: string, actualDuration: number, baseDuration: number, startTime: number, commitTime: number) => {
+  const handleRender = (
+    id: string,
+    phase: string,
+    actualDuration: number,
+    baseDuration: number
+  ) => {
     if (isDragActive) {
       console.log(`[DRAG PROFILER] ${id} render during drag:`, {
         phase,
@@ -119,19 +152,26 @@ export function DragProfiler({ children, dragId }: { children: React.ReactNode; 
 // Performance monitoring dashboard component
 export function PerformanceDashboard() {
   const [isVisible, setIsVisible] = useState(false);
-  const [metrics, setMetrics] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<
+    Array<{ timestamp: number; memoryUsage: number; fps: number }>
+  >([]);
 
   useEffect(() => {
     // Collect performance metrics every second
     const interval = setInterval(() => {
-      const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+      const memoryUsage =
+        (performance as unknown as { memory?: { usedJSHeapSize: number } })
+          .memory?.usedJSHeapSize || 0;
       const fps = 60; // Placeholder - would need more complex calculation
 
-      setMetrics(prev => [...prev.slice(-19), {
-        timestamp: Date.now(),
-        memoryUsage,
-        fps,
-      }]);
+      setMetrics((prev) => [
+        ...prev.slice(-19),
+        {
+          timestamp: Date.now(),
+          memoryUsage,
+          fps,
+        },
+      ]);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -150,6 +190,10 @@ export function PerformanceDashboard() {
 
   return (
     <div className="fixed bottom-4 right-4 bg-white border rounded-lg shadow-lg p-4 max-w-sm z-50">
+      {/** Safely access the latest metrics entry */}
+      {(() => {
+        return null;
+      })()}
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold">Performance Dashboard</h3>
         <button
@@ -164,17 +208,26 @@ export function PerformanceDashboard() {
         <div>
           <span className="font-medium">Memory Usage:</span>
           <span className="ml-2">
-            {metrics.length > 0
-              ? `${Math.round(metrics[metrics.length - 1].memoryUsage / 1024 / 1024)}MB`
-              : 'N/A'
-            }
+            {(() => {
+              const last = metrics.length
+                ? metrics[metrics.length - 1]
+                : undefined;
+              return last
+                ? `${Math.round(last.memoryUsage / 1024 / 1024)}MB`
+                : "N/A";
+            })()}
           </span>
         </div>
 
         <div>
           <span className="font-medium">FPS:</span>
           <span className="ml-2">
-            {metrics.length > 0 ? metrics[metrics.length - 1].fps : 'N/A'}
+            {(() => {
+              const last = metrics.length
+                ? metrics[metrics.length - 1]
+                : undefined;
+              return last ? last.fps : "N/A";
+            })()}
           </span>
         </div>
 
@@ -191,7 +244,7 @@ export function PerformanceDashboard() {
           onClick={() => {
             const report = dragPerformanceMonitor.generateReport();
             console.log(report);
-            alert('Performance report logged to console');
+            alert("Performance report logged to console");
           }}
           className="text-xs bg-gray-100 px-2 py-1 rounded"
         >
@@ -206,22 +259,35 @@ export function PerformanceDashboard() {
 export const devToolsIntegration = {
   // Enable React DevTools Profiler
   enableProfiler: () => {
-    console.log('[PROFILER] React DevTools Profiler enabled');
-    console.log('[PROFILER] Use React DevTools to see component render times');
+    console.log("[PROFILER] React DevTools Profiler enabled");
+    console.log("[PROFILER] Use React DevTools to see component render times");
   },
 
   // Log current performance state
   logPerformanceState: () => {
     const sessions = dragPerformanceMonitor.getActiveSessions();
-    console.log('[PROFILER] Active drag sessions:', sessions.length);
-    console.log('[PROFILER] Sessions:', sessions);
+    console.log("[PROFILER] Active drag sessions:", sessions.length);
+    console.log("[PROFILER] Sessions:", sessions);
 
-    if (typeof performance !== 'undefined' && performance.memory) {
-      const memory = performance.memory;
-      console.log('[PROFILER] Memory usage:', {
+    if (
+      typeof performance !== "undefined" &&
+      (
+        performance as unknown as {
+          memory?: { usedJSHeapSize: number; totalJSHeapSize: number };
+        }
+      ).memory
+    ) {
+      const memory = (
+        performance as unknown as {
+          memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+        }
+      ).memory;
+      console.log("[PROFILER] Memory usage:", {
         used: `${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB`,
         total: `${Math.round(memory.totalJSHeapSize / 1024 / 1024)}MB`,
-        percentage: `${Math.round((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100)}%`,
+        percentage: `${Math.round(
+          (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100
+        )}%`,
       });
     }
   },
@@ -240,21 +306,44 @@ export const devToolsIntegration = {
           `profiler-session-end-${sessionName}`
         );
 
-        const measure = performance.getEntriesByName(`profiler-session-${sessionName}`)[0];
-        console.log(`[PROFILER] Session ${sessionName} completed: ${measure.duration.toFixed(2)}ms`);
-        return measure.duration;
-      }
+        const measure = performance.getEntriesByName(
+          `profiler-session-${sessionName}`
+        )[0];
+        if (measure) {
+          console.log(
+            `[PROFILER] Session ${sessionName} completed: ${measure.duration.toFixed(
+              2
+            )}ms`
+          );
+          return measure.duration;
+        }
+        return 0;
+      },
     };
-  }
+  },
 };
 
 // Auto-enable profiler in development
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   // Add global profiler helpers to window
-  (window as any).reactProfiler = devToolsIntegration;
-  (window as any).performanceMonitor = dragPerformanceMonitor;
+  (
+    window as unknown as {
+      reactProfiler?: unknown;
+      performanceMonitor?: unknown;
+    }
+  ).reactProfiler = devToolsIntegration;
+  (
+    window as unknown as {
+      reactProfiler?: unknown;
+      performanceMonitor?: unknown;
+    }
+  ).performanceMonitor = dragPerformanceMonitor;
 
-  console.log('🔧 React DevTools Profiler helpers loaded');
-  console.log('📊 Use window.reactProfiler.logPerformanceState() to see current metrics');
-  console.log('⏱️  Use window.reactProfiler.startProfilingSession(name) to profile operations');
+  console.log("🔧 React DevTools Profiler helpers loaded");
+  console.log(
+    "📊 Use window.reactProfiler.logPerformanceState() to see current metrics"
+  );
+  console.log(
+    "⏱️  Use window.reactProfiler.startProfilingSession(name) to profile operations"
+  );
 }
