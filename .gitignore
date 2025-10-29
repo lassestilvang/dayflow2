@@ -3,6 +3,7 @@
 .kilocode
 playwright-report
 test-results
+docs
 
 # dependencies
 /node_modules
